@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (Direction B, "Slab and Hairline").
+ * Dark page, light square-cornered cards, one green accent.
+ * Components use these tokens only; no one-off colour or shadow values.
+ */
+@theme {
+  /* Page */
+  --color-page: #0e0f10;
+  --color-ink: #f0f0ee; /* 16.9:1 on page */
+  --color-ink-muted: #a3a7ad; /* 7.9:1 on page */
+  --color-ink-faint: #7d838b; /* decorative only */
+  --color-line: rgb(255 255 255 / 0.22);
+
+  /* Raised surfaces (project cards) */
+  --color-card: #f3f3f1;
+  --color-card-media: #d6d7d4;
+  --color-card-ink: #131415;
+  --color-card-ink-muted: #50555b; /* 6.7:1 on card */
+  --color-slab: #34383d;
+
+  /* Accent: used on the dark page only, never as text on a card */
+  --color-accent: #3ddc84; /* 10.8:1 on page */
+
+  --font-sans: "Archivo Variable", system-ui, sans-serif;
+  --font-mono:
+    "Courier New", Courier, "Liberation Mono", "Nimbus Mono PS", monospace;
+
+  --radius-none: 0;
+  --shadow-slab: 8px 8px 0 var(--color-slab);
+  --shadow-slab-hover: 11px 11px 0 var(--color-accent);
+
+  --container-content: 75rem;
+  --container-prose: 68ch;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-blink: blink 1.1s steps(1) infinite;
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 106.25%; /* 17px body */
+    line-height: 1.55;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  [id] {
+    scroll-margin-top: 1.5rem;
+  }
+}
+
+@utility label-caps {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
