@@ -13,6 +13,8 @@ Data science portfolio. Read `PROJECT_SPEC.md` before substantial changes.
 
 - React Router (framework mode, `ssr: false`, prerendered), Vite, Tailwind v4, TypeScript.
 - `src/data/projects.ts` is the project registry. Adding a record adds the card, the route and the prerendered page. Never hard-code card positions.
+- `projects/<slug>/index.mdx` is each project's write-up (MDX). `<Section title kind>` and `<Placeholder>` are available without imports.
+- `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`.
 - `src/data/site.ts` holds site-wide copy and profile links.
 - `src/styles/global.css` holds every design token (`@theme`). Components use tokens only.
 - The frontend is static. Interactive applications are hosted elsewhere and linked through `applicationUrl`.
