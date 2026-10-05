@@ -10,6 +10,8 @@ export type Project = {
   /** Path under /public, 16:10, e.g. "project-thumbnails/credit-classification.webp". */
   thumbnail?: string;
   thumbnailAlt?: string;
+  /** "contain" shows the whole image (for diagrams); the default "cover" fills the frame. */
+  thumbnailFit?: "cover" | "contain";
   summary: string;
   repositoryUrl?: string;
   youtubeVideoId?: string;
@@ -27,6 +29,9 @@ export const projects: Project[] = [
     title: "My First Project: Data Science Module",
     category: "BSc Economics and Finance",
     order: 1,
+    thumbnail: "project-thumbnails/bsc-data-science.jpg",
+    thumbnailAlt:
+      "Data Science Homepage title card over a background of falling green code.",
     summary: PLACEHOLDER_SUMMARY,
   },
   {
@@ -34,6 +39,10 @@ export const projects: Project[] = [
     title: "Credit Classification",
     category: "MSc Data Science / Module",
     order: 2,
+    thumbnail: "project-thumbnails/credit-classification.jpg",
+    thumbnailAlt:
+      "Credit classification with machine learning: panels for logistic regression, perceptron and decision tree.",
+    youtubeVideoId: "BdGzb_iidic",
     summary: PLACEHOLDER_SUMMARY,
   },
   {
@@ -41,6 +50,11 @@ export const projects: Project[] = [
     title: "Reinforcement Learning in Supply Chain Management",
     category: "MSc Data Science / Dissertation",
     order: 3,
+    thumbnail: "project-thumbnails/reinforcement-learning-supply-chain.png",
+    thumbnailAlt:
+      "Supply chain model diagram: two suppliers, two delivery routes and a warehouse, with the demand, order and inventory equations.",
+    thumbnailFit: "contain",
+    youtubeVideoId: "3rEmRgLgxs0",
     summary: PLACEHOLDER_SUMMARY,
   },
 ];
