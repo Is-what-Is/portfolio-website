@@ -15,7 +15,11 @@ export function ProjectCard({ project }: { project: Project }) {
           height={1000}
           loading="lazy"
           decoding="async"
-          className="aspect-16/10 w-full bg-card-media object-cover"
+          className={`aspect-16/10 w-full ${
+            project.thumbnailFit === "contain"
+              ? "bg-white object-contain"
+              : "bg-card-media object-cover"
+          }`}
         />
       ) : (
         <div className="flex aspect-16/10 w-full items-center justify-center bg-card-media text-[0.8125rem] text-card-ink-muted">
