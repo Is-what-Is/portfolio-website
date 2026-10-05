@@ -54,6 +54,7 @@ export const projects: Project[] = [
     thumbnailAlt:
       "Supply chain model diagram: two suppliers, two delivery routes and a warehouse, with the demand, order and inventory equations.",
     thumbnailFit: "contain",
+    youtubeVideoId: "3rEmRgLgxs0",
     summary: PLACEHOLDER_SUMMARY,
   },
 ];
