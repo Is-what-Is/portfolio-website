@@ -6,7 +6,7 @@ import { site } from "../data/site";
 
 export function meta() {
   return [
-    { title: `${site.title} | ${site.name}` },
+    { title: `${site.title} | ${site.brand}` },
     {
       name: "description",
       content:
