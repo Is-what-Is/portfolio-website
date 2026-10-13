@@ -12,7 +12,7 @@ import NotFoundPage from "./NotFoundPage";
 export function meta({ params }: { params: { slug?: string } }) {
   const project = getProject(params.slug);
   return [
-    { title: `${project?.title ?? "Project Not Found"} | ${site.name}` },
+    { title: `${project?.title ?? "Project Not Found"} | ${site.brand}` },
     ...(project ? [{ name: "description", content: project.summary }] : []),
   ];
 }

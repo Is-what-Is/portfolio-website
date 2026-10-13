@@ -11,9 +11,9 @@ export function SiteHeader() {
         <Link
           to="/"
           translate="no"
-          className="py-2.5 text-xl font-extrabold tracking-tight text-ink uppercase no-underline hover:text-accent"
+          className="py-2.5 text-xl font-extrabold tracking-tight text-ink no-underline hover:text-accent"
         >
-          {site.name}
+          {site.brand}
         </Link>
         <nav aria-label="Main" className="flex gap-9">
           <Link to="/#projects" className={navLink}>

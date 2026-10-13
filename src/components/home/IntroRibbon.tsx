@@ -19,9 +19,13 @@ export function IntroRibbon() {
               id="about-heading"
               className="mb-2.5 text-[1.375rem] leading-tight font-extrabold uppercase"
             >
-              <span translate="no">{site.name}</span>
+              {site.aboutHeading}
             </h1>
-            <p className="max-w-prose text-ink-muted">{site.intro}</p>
+            <div className="max-w-prose space-y-4 text-ink-muted">
+              {site.about.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
           </div>
           <ul className="flex flex-[1_1_13rem] list-none flex-col justify-center border-t border-line px-6 py-4 sm:px-9 md:border-t-0 md:border-l">
             {links.map((link) => (
