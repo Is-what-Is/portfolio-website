@@ -47,7 +47,7 @@ export function ProjectSection({
           {title}
         </h2>
       </div>
-      <div className="prose max-w-prose min-w-0">{children}</div>
+      <div className="prose min-w-0">{children}</div>
     </section>
   );
 }
