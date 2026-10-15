@@ -14,6 +14,8 @@ export type Project = {
   thumbnailFit?: "cover" | "contain";
   summary: string;
   repositoryUrl?: string;
+  /** Link text for the repository in the Source Code section. */
+  repositoryLabel?: string;
   youtubeVideoId?: string;
   /** Link to the separately hosted web application, when one exists. */
   applicationUrl?: string;
@@ -55,7 +57,10 @@ export const projects: Project[] = [
       "Supply chain model diagram: two suppliers, two delivery routes and a warehouse, with the demand, order and inventory equations.",
     thumbnailFit: "contain",
     youtubeVideoId: "3rEmRgLgxs0",
-    summary: PLACEHOLDER_SUMMARY,
+    repositoryUrl: "https://github.com/Is-what-Is/RL-in-SupplyChains",
+    repositoryLabel: "View the Research Code and Documentation",
+    summary:
+      "MSc dissertation investigating whether a Deep Q-Network agent can learn to adapt supplier allocation, delivery routing and safety stock decisions in a simulated supply chain exposed to disruptions.",
   },
 ];
 

@@ -1,8 +1,11 @@
+import "katex/dist/katex.min.css";
 import { Link, useParams } from "react-router";
 import { Container } from "../components/layout/Container";
+import { Figure } from "../components/project/Figure";
 import { Placeholder } from "../components/project/Placeholder";
 import { ProjectSection } from "../components/project/ProjectSection";
 import { RelatedProjects } from "../components/project/RelatedProjects";
+import { TableScroll } from "../components/project/TableScroll";
 import { YouTubeEmbed } from "../components/project/YouTubeEmbed";
 import { getProject, getProjectsNewestFirst } from "../data/projects";
 import { site } from "../data/site";
@@ -21,7 +24,12 @@ const actionLink =
   "label-caps inline-block border border-line px-5 py-3.5 no-underline hover:border-accent hover:text-accent";
 
 // Components available inside every projects/<slug>/index.mdx file.
-const mdxComponents = { Section: ProjectSection, Placeholder };
+const mdxComponents = {
+  Section: ProjectSection,
+  Placeholder,
+  Figure,
+  TableScroll,
+};
 
 export default function ProjectPage() {
   const { slug } = useParams();
@@ -107,7 +115,7 @@ export default function ProjectPage() {
           {project.repositoryUrl ? (
             <p>
               <a href={project.repositoryUrl} className={actionLink}>
-                Source Repository
+                {project.repositoryLabel ?? "Source Repository"}
               </a>
             </p>
           ) : (

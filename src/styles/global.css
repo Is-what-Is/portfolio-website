@@ -20,6 +20,9 @@
   --color-card-ink-muted: #50555b; /* 6.7:1 on card */
   --color-slab: #34383d;
 
+  /* Backing for research figures, which are drawn on white */
+  --color-figure: #ffffff;
+
   /* Accent: used on the dark page only, never as text on a card */
   --color-accent: #3ddc84; /* 10.8:1 on page */
 
@@ -136,15 +139,76 @@
     max-width: 100%;
   }
 
-  .prose table {
-    display: block;
+  /* Text stays at reading width; figures and tables may use the full column. */
+  .prose > :not(figure, .table-block, .katex-display) {
+    max-width: var(--container-prose);
+  }
+
+  .prose > :is(figure, .table-block) {
+    margin-block: 2rem;
+  }
+
+  .prose blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .table-scroll {
     overflow-x: auto;
+  }
+
+  .prose table {
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .table-title {
+    padding-bottom: 0.75rem;
+    color: var(--color-ink-muted);
+    font-size: 0.875rem;
+  }
+
+  .table-title strong {
+    color: var(--color-ink);
   }
 
   .prose :is(th, td) {
     border-bottom: 1px solid var(--color-line);
     padding: 0.5rem 1rem 0.5rem 0;
     text-align: left;
+    vertical-align: top;
+  }
+
+  .prose th {
+    font-weight: 700;
+  }
+
+  .prose :is(th, td).num {
+    padding-left: 1rem;
+    text-align: right;
+  }
+
+  .prose td.num,
+  .prose th[scope="row"] {
+    white-space: nowrap;
+  }
+
+  .prose :is(th, td):last-child {
+    padding-right: 0;
+  }
+
+  /* KaTeX output: long display equations scroll rather than overflow. */
+  .prose .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+  }
+
+  .prose .katex {
+    font-size: 1.1em;
   }
 }
