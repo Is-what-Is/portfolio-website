@@ -2,7 +2,9 @@
   Project write-up: Self-Adaptive Digital Twins for Autonomous Supply Chain
   Decision Support (COMM514 MSc research project).
   Source of truth: the final report and the code in the RL-in-SupplyChains
-  repository. Keep the blank lines around Markdown inside JSX.
+  repository. Style: short sentences, one idea per paragraph, at most one
+  explanatory sentence per figure or table. Let the visuals carry the detail.
+  Keep the blank lines around Markdown inside JSX.
   Maths: $inline$ and $$display$$ are rendered by KaTeX at build time.
 */}
 
@@ -14,236 +16,136 @@ import policyActions from "./figures/policy-actions-s5.png";
 
 <Section title="Summary" kind="context">
 
-This research asks whether reinforcement learning (RL) can support adaptive decision-making in a supply chain exposed to operational disruptions. I built a simulated supply chain, trained a Deep Q-Network (DQN) agent to choose a supplier allocation, a delivery route and a safety stock level each simulated day, and compared its learned policy with fixed, random and rule-based policies.
+This research tests if reinforcement learning (RL) can make adaptive decisions in a supply chain with disruptions. A Deep Q-Network (DQN) agent chose a supplier allocation, a delivery route and a safety stock each simulated day. I compared it with fixed, random and rule-based policies.
 
-- In the disruption scenario reported here, the DQN achieved a higher average fill rate (0.719) and a lower average backlog than any comparison policy. It did so by holding more inventory, and it scored a lower total reward than the rule-based policy.
-- The agent switched actions frequently and showed signs of reward hacking, which makes reward function design the clearest weakness of the approach.
-- RL looks promising for targeted supply chain decisions, but it belongs alongside optimisation, classical machine learning, rule-based systems, explainable AI and human oversight, not in place of them.
+- The DQN had the highest fill rate and the lowest backlog in the reported scenario. The rule-based policy had a better reward.
+- On an unseen scenario, the DQN did much better than the fixed and random policies, but not as well as the rule-based policy.
+- The agent showed signs of reward hacking and changed actions frequently. Reward design is the main weakness.
+- RL can help with specific supply chain decisions. It needs optimisation, classical machine learning, rule-based methods, explainability and human oversight alongside it.
 
 </Section>
 
 <Section title="Background and Motivation" kind="context">
 
-I have spent three years delivering digital solutions in logistics. The company I work for develops logistics control tower software with digital twin capabilities, and that work prompted the question behind this project: could more advanced machine learning, and RL in particular, add useful decision support to software of this kind?
+I have three years of experience in digital solutions for logistics. My company develops logistics control tower software with digital twin capabilities. This project explores if RL can add useful decision support to that type of software.
 
-The question matters most where operations are complex and disruption is common, as in construction, defence and manufacturing. In these industries a supplier shortfall or a congested route affects later decisions, and the right response depends on the state of the whole system at the time. A digital twin offers a safe place to learn and test such responses before acting on them.
-
-Much of the published work on digitally twinned supply chains is still conceptual, and where disruption responses are modelled they are usually prescribed in advance rather than learned. This project is a research proof of concept that tests the learned alternative in simulation. It is not a deployed product feature.
+Adaptive decisions matter most in complex, disruption-prone industries such as construction, defence and manufacturing. This project is a research proof of concept, not a deployed product.
 
 </Section>
 
 <Section title="Problem Statement" kind="context">
 
-Supply chain management looks like a natural fit for RL: decisions are sequential, and each one changes the conditions for the next. In practice, four features make supply chains hard to learn from.
+Supply chains are difficult for RL:
 
-- **Sparse and delayed rewards.** The effect of a decision may only appear several periods later. An order placed today arrives after the lead time, and a poor sourcing choice can surface as backlog days or weeks afterwards, which makes it hard to attribute outcomes to actions.
-- **Different operational timescales.** Supply chain processes run at hourly, daily and weekly cadences. An agent acting on a single time step has to coordinate decisions whose effects play out on others.
-- **Limited training data.** Real disruptions are infrequent and rarely repeat, so historical records seldom contain the range of actions, outcomes and disruptions an agent needs. Training directly on a live supply chain is impractical.
-- **Complexity and interpretability.** Supply chains consist of interdependent processes, and deep RL policies are difficult to inspect, validate and explain to the people accountable for the decisions.
+- **Delayed rewards.** The effect of a decision can appear days or weeks later.
+- **Different timescales.** Processes run hourly, daily and weekly.
+- **Limited data.** Real disruptions are rare, so historical data has few examples to learn from.
+- **Interpretability.** Deep RL policies are difficult to explain and validate.
 
-These are general challenges. This project tackles limited training data directly by generating experience in simulation. Delayed consequences are present through a five-day delivery lead time, although the reward itself is calculated every day. The simulation runs on a single daily cadence, so the multi-timescale problem is not studied here; it returns in the discussion as a limitation. Interpretability is also left open and discussed as future work.
-
-The research question was:
+This project addresses the data problem with simulation. The other challenges remain open.
 
 > Can a simplified supply chain simulation demonstrate that reinforcement learning can support supply chain management decisions and adapt to operational disruptions?
 
 </Section>
 
-<Section title="Data and Simulation Environment" kind="implementation">
+<Section title="Data" kind="implementation">
 
-No external dataset was used. All training and evaluation data came from a stochastic, single-echelon simulation of a wholesaler supplied by two identical suppliers over two delivery routes. Demand and delivery lead times are random, supplier capacity and route traffic can be disrupted, and each episode runs for 365 daily steps.
-
-Simulation was the practical choice because suitable historical interaction data rarely exists. An RL agent needs many episodes of decisions and their outcomes, including disruptions, and a simulator can replay the same type of disruption under controlled conditions as often as required.
-
-Each day the simulation records the quantities in Table 1. Together with the day number, these form the agent's state.
-
-<TableScroll label="Table 1" caption="Observations generated by the simulation each day.">
-<table>
-<thead>
-<tr><th scope="col">Observation</th><th scope="col">Description</th><th scope="col">Role in decision-making</th></tr>
-</thead>
-<tbody>
-<tr><td>Demand, $D_t$</td><td>Daily customer demand: a mean of 50 units plus normally distributed noise with standard deviation $\sigma_D$, rounded and floored at zero.</td><td>In the state.</td></tr>
-<tr><td>Orders, $O_t$</td><td>Replenishment order calculated by the Proportional Order-Up-To (POUT) policy, given the safety stock target chosen by the agent.</td><td>In the state; shaped by the safety stock action.</td></tr>
-<tr><td>Traffic A, $\text{Traffic}^A_t$</td><td>Route A traffic parameter, added to the Route A delivery lead time.</td><td>In the state.</td></tr>
-<tr><td>Traffic B, $\text{Traffic}^B_t$</td><td>Route B traffic parameter, added to the Route B delivery lead time.</td><td>In the state.</td></tr>
-<tr><td>Available stock</td><td>$I_{t-1} + \text{Delivered}_t - B_{t-1}$: yesterday's inventory plus today's deliveries, less yesterday's backlog. Deliveries depend on the supplier split, supplier capacity and route lead time.</td><td>In the state.</td></tr>
-<tr><td>Inventory, $I_t$</td><td>Stock left after meeting demand: $\max(0,\ \text{Available}_t - D_t)$.</td><td>In the state; penalised in the reward.</td></tr>
-<tr><td>Backlog, $B_t$</td><td>Demand left unmet: $\max(0,\ D_t - \text{Available}_t)$.</td><td>In the state; penalised in the reward.</td></tr>
-<tr><td>Fill rate</td><td>Proportion of the day's demand fulfilled from available stock.</td><td>In the state; rewarded. Averaged over the episode as the service-level KPI.</td></tr>
-<tr><td>NSAmp ratio</td><td>Net Stock Amplification: $\mathrm{Var}(I)/\mathrm{Var}(D)$, the variance of inventory relative to the variance of demand, calculated over all days of the episode so far.</td><td>In the state; penalised in the reward. Used as the inventory-stability KPI.</td></tr>
-</tbody>
-</table>
-</TableScroll>
-
-The simulation also generates the parameters that drive disruptions: each supplier's capacity and the demand noise level $\sigma_D$. These were deliberately removed from the agent's state, so the agent has to infer a disruption from its consequences, such as rising backlog and a falling fill rate, as a manager would. In preliminary experiments this partial view generalised better to an unseen scenario than giving the agent every parameter. The rule-based comparison policy, by contrast, reads these parameters directly.
+No external dataset was used. A stochastic simulation generated all training and evaluation data. Simulation gives the agent many repeatable disruptions, which real records cannot supply.
 
 </Section>
 
 <Section title="Methodology" kind="theory">
 
-The work had two strands: building the supply chain simulation, and training an RL agent to make decisions within it.
-
 ### Supply chain simulation
 
 <Figure src={supplyChainDesign} width={1280} height={720} label="Figure 1" alt="Diagram of the simulated supply chain. Supplier A and Supplier B ship goods over Route A or Route B to a warehouse. Equations alongside define demand, orders under the POUT policy, the supplier split, route lead times, deliveries, available stock, inventory, backlog and fulfilment, with fill rate and NSAmp as KPIs.">
-The simulated supply chain and its defining equations: stochastic demand, POUT ordering, two suppliers with adjustable capacity, two delivery routes with different lead-time variability, and the warehouse inventory accounts.
+The single-echelon supply chain: stochastic demand, two suppliers, two delivery routes and a warehouse, with the equations for each step.
 </Figure>
 
-The simulation is a set of standard supply chain equations, drawn mainly from the work of Disney, that describe demand, ordering, supply, lead times, deliveries, inventory and backlog. Manufacturing and explicit costs are excluded to keep the focus on inventory dynamics under disruption.
-
-Orders follow the Proportional Order-Up-To (POUT) policy:
-
-$$
-O_t = \max\left(0,\ \operatorname{round}\left(\hat{D}_{t+L+1} + \frac{1}{T}\left(S_t - I_t\right) + \frac{1}{T}\sum_{i=1}^{L}\left(\hat{D}_{t,t+i} - O_{t-i}\right)\right)\right)
-$$
-
-The first term is the demand forecast, here simply the mean demand. The second corrects the gap between the safety stock target $S_t$ and current inventory $I_t$. The third corrects the gap between the expected and actual orders in the pipeline over the assumed lead time $L = 5$ days. The proportional controller is set to $1/T = 0.5$, which damps both corrections.
-
-The wholesaler places a proportion $\alpha_t$ of each order with Supplier A and $1 - \alpha_t$ with Supplier B, and each supplier delivers in proportion to its capacity: $Q^A_t = \alpha_t O_t C_A$ and $Q^B_t = (1 - \alpha_t) O_t C_B$. Both routes have an expected lead time of five days, $LT_t = \max(1,\ \operatorname{round}(5 + \eta_t + \text{Traffic}_t))$, but Route B's noise term is more variable ($\eta^B \sim N(0, 2)$ against $\eta^A \sim N(0, 1)$), so Route A is preferable when there is no disruption.
-
-The safety stock options come from the standard formula for a 90% fill-rate target:
-
-$$
-S^* = \Phi^{-1}(\text{fill rate})\sqrt{L\sigma_D^2}
-$$
-
-With $\sigma_D = 10$ this gives 29 units, and with $\sigma_D = 40$ it gives 115.
+One episode is 365 days. Each day, the agent selects one of 18 actions: a supplier split $\alpha$ of 0.2, 0.5 or 0.8, Route A or B, and a safety stock of 20, 29 or 115 units. The agent cannot see supplier capacity or the demand noise level. It must detect disruptions from their effects.
 
 ### Disruption scenarios
 
-Nine scenarios (Table 2) vary supplier capacity, route traffic and demand noise. Each disruption lasts 90 days, a full quarter, and starts on a randomly chosen day no later than day 275. In combined scenarios, each disruption draws its own start day, so the disruptions may overlap or occur separately.
+Each disruption lasts 90 days and starts on a random day.
 
-<TableScroll label="Table 2" caption="Disruption scenarios. Scenarios 0 to 7 were sampled during training; scenario 8 was held out for evaluation only.">
+<TableScroll label="Table 1" caption="Disruption scenarios. Scenarios 0 to 7 were used in training. Scenario 8 was used only for evaluation.">
 <table>
 <thead>
-<tr><th scope="col">Scenario</th><th scope="col">Description</th><th scope="col">Use</th></tr>
+<tr><th scope="col">Scenario</th><th scope="col">Disruption</th><th scope="col">Use</th></tr>
 </thead>
 <tbody>
-<tr><td>0</td><td>No disruption: $\sigma_D = 10$, $C_A = C_B = 1$ and $\text{Traffic}^A = \text{Traffic}^B = 0$.</td><td>Training</td></tr>
-<tr><td>1</td><td>Supplier A capacity disruption, reducing $C_A$ from 1 to 0.5.</td><td>Training</td></tr>
-<tr><td>2</td><td>Supplier B capacity disruption, reducing $C_B$ from 1 to 0.5.</td><td>Training</td></tr>
-<tr><td>3</td><td>Route A traffic disruption, increasing $\text{Traffic}^A$ from 0 to 5.</td><td>Training</td></tr>
-<tr><td>4</td><td>Demand noise spike, increasing $\sigma_D$ from 10 to 40.</td><td>Training</td></tr>
-<tr><td>5</td><td>Supplier A capacity and Route A traffic disruptions.</td><td>Training</td></tr>
-<tr><td>6</td><td>Supplier A capacity disruption and demand noise spike.</td><td>Training</td></tr>
-<tr><td>7</td><td>Route A traffic disruption and demand noise spike.</td><td>Training</td></tr>
-<tr><td>8</td><td>Supplier A capacity, Route A traffic and demand noise disruptions together.</td><td>Unseen (evaluation only)</td></tr>
+<tr><td>0</td><td>None ($\sigma_D = 10$, $C_A = C_B = 1$, no traffic)</td><td>Training</td></tr>
+<tr><td>1</td><td>Supplier A capacity: $C_A$ from 1 to 0.5</td><td>Training</td></tr>
+<tr><td>2</td><td>Supplier B capacity: $C_B$ from 1 to 0.5</td><td>Training</td></tr>
+<tr><td>3</td><td>Route A traffic: from 0 to 5</td><td>Training</td></tr>
+<tr><td>4</td><td>Demand noise: $\sigma_D$ from 10 to 40</td><td>Training</td></tr>
+<tr><td>5</td><td>Supplier A capacity + Route A traffic</td><td>Training</td></tr>
+<tr><td>6</td><td>Supplier A capacity + demand noise</td><td>Training</td></tr>
+<tr><td>7</td><td>Route A traffic + demand noise</td><td>Training</td></tr>
+<tr><td>8</td><td>Supplier A capacity + Route A traffic + demand noise</td><td>Unseen</td></tr>
 </tbody>
 </table>
 </TableScroll>
 
-Each scenario has an obvious correct response, which makes the agent's behaviour easy to judge: move orders away from a disrupted supplier, switch to Route B when Route A is congested, and raise safety stock when demand becomes volatile.
-
 ### Reinforcement learning architecture
 
 <Figure src={dtArchitecture} width={1280} height={720} label="Figure 2" alt="Architecture diagram. The managed system, the supply chain simulation, produces state through probes and applies actions through effectors for safety stock, supplier allocation and delivery route. The managing system, the DQN agent, contains a Q-network, a target Q-network, a DQN loss and an experience replay memory, labelled with the Monitor, Analyse, Plan, Execute and Knowledge stages of a MAPE-K loop.">
-Digital twin architecture. Probes pass the simulation's state to the Q-network, which selects the action with the highest estimated value; effectors apply it as a safety stock, supplier allocation and route. Each transition $(s, a, r, s')$ is stored in replay memory, from which the network learns, with a periodically copied target network stabilising training. The loop mirrors the Monitor, Analyse, Plan and Execute stages of a MAPE-K feedback loop over shared Knowledge.
+The digital twin architecture: the DQN agent monitors the simulation, selects actions and learns from stored experience, in a MAPE-K loop.
 </Figure>
 
-One episode is one simulated year of 365 daily steps. The simulation is wrapped as a Gymnasium environment, the standard interface RL libraries expect. Each day the agent picks one of 18 discrete actions, every combination of:
+The agent trained for 2,500 episodes. Each episode used a random scenario from 0 to 7: the no-disruption baseline and seven disruption scenarios. I then compared the agent with three policies on all scenarios, including the unseen scenario 8:
 
-- supplier allocation $\alpha \in \{0.2, 0.5, 0.8\}$, the share of the order placed with Supplier A;
-- route $\in \{\text{A}, \text{B}\}$, the delivery route;
-- safety stock target $S \in \{20, 29, 115\}$ units.
-
-The agent was trained for 2,500 episodes. At the start of each one, a scenario was drawn at random from scenarios 0 to 7: the no-disruption baseline and the seven disruption scenarios. Its learned policy was then compared with three baselines across scenarios 0 to 8, including the unseen scenario 8:
-
-- **Fixed:** always $\alpha = 0.5$, Route A and a safety stock of 20. It never adapts, so it sets a lower bound.
-- **Random:** a uniformly random action each day.
-- **Rule-based:** a hand-written heuristic that reads the true disruption parameters and applies the obvious correct response. With perfect information about the disruption, it serves as the upper target benchmark.
+- **Fixed:** always the same action. It sets a lower bound.
+- **Random:** a random action each day.
+- **Rule-based:** reads the true disruption parameters and applies the correct response. It sets the target to beat.
 
 </Section>
 
 <Section title="Theoretical Foundations" kind="theory">
 
-This section covers the RL concepts needed to follow the experiment, each tied to the simulated supply chain.
-
 ### Markov decision process
 
-RL problems are formulated as a Markov decision process (MDP), the tuple $(\mathcal{S}, \mathcal{A}, P, R, \gamma)$:
-
-- **State** $s \in \mathcal{S}$: what the agent knows about the supply chain today, namely the ten-element observation vector described in Table 1.
-- **Action** $a \in \mathcal{A}$: one of the 18 combinations of supplier allocation, route and safety stock.
-- **Transition dynamics** $P(s' \mid s, a)$: how the supply chain moves to tomorrow's state. Here the simulation's equations and random draws define the transitions.
-- **Reward** $R(s, a)$: the numerical feedback for the day's outcome.
-- **Discount factor** $\gamma$: how much future rewards count relative to immediate ones. This project used $\gamma = 0.99$, so outcomes weeks ahead still matter.
-
-Each day follows the same loop: observe the state, choose an action, let the supply chain move on a day, receive a reward and the next state, and update the policy.
-
-The Markov assumption requires the state to contain enough information to predict the next state and reward, given the action. Here it holds only approximately. Supplier capacity, the demand noise level and the deliveries still in transit are not in the agent's state, so the problem is strictly partially observable, and the agent must infer what it cannot see from the variables it can.
+The agent and the simulation interact in a loop. The agent observes the **state**: the current supply chain data. It selects an **action**. The simulation moves forward one day and returns a **reward** and the **next state**. The agent learns which actions give the highest total reward over time.
 
 ### Reward function
 
-The agent was trained to maximise this daily reward:
+The reward function defines the objective used to train the agent:
 
 $$
 r_t = 100 \cdot \text{FillRate}_t - 2 \cdot \text{NSAmp}_t - 0.5 \cdot B_t - 0.1 \cdot I_t
 $$
 
-It rewards meeting demand and penalises inventory instability (NSAmp), unmet demand (backlog) and holding stock (inventory). By these weights, a unit of backlog costs five times as much as a unit of inventory, so holding buffer stock is cheap relative to running short.
+### Bellman equation
 
-The reward is the agent's objective, not the measure of success. Policies are evaluated on operational KPIs reported separately: average fill rate, NSAmp, inventory and backlog. The two can diverge. An agent can learn to exploit weaknesses in the reward design, improving its measured objective without delivering the operational behaviour intended. This is known as reward hacking, and the results below show signs of it.
-
-### The Bellman equation
-
-The optimal action-value function $Q^*(s, a)$ is the expected discounted return from taking action $a$ in state $s$ and acting optimally afterwards. It satisfies the Bellman optimality equation:
+The value of an action is its immediate reward plus the discounted value of the best next action:
 
 $$
-Q^*(s,a) = \mathbb{E}\left[r + \gamma \max_{a'} Q^*(s',a') \;\middle|\; s,a\right]
+Q^*(s,a) = \mathbb{E}\left[r + \gamma \max\nolimits_{a'} Q^*(s',a') \;\middle|\; s,a\right]
 $$
-
-The value of an action is its immediate reward plus the discounted value of the best action available in the next state. For the supply chain, this is how the agent can value a decision such as raising safety stock today by what it prevents later, not only by today's inventory penalty.
 
 ### Deep Q-Network
 
-With a continuous state, $Q^*$ cannot be stored as a table, so a DQN approximates it with a neural network $Q(s, a; \theta)$. Here it is a multi-layer perceptron with two hidden layers of 128 units, mapping the ten-element state to an estimated value for each of the 18 actions. Training proceeds as follows:
-
-1. The network receives the current state as input.
-2. It estimates the value of every available action.
-3. The agent selects an action with an $\epsilon$-greedy strategy: usually the highest-valued action, but a random one with probability $\epsilon$. $\epsilon$ starts at 1.0 and falls linearly to 0.05 over the first 30% of training.
-4. The simulation returns a reward and the next state.
-5. The transition $(s, a, r, s')$ is stored in a replay buffer of the latest 50,000 transitions. Every four steps, a random mini-batch of 64 is sampled for training, which breaks the correlation between consecutive days.
-6. Each prediction is compared with a target built from the reward and the next state's estimated action values.
-7. The loss is backpropagated through the network, and gradient descent (the Adam optimiser, learning rate $10^{-4}$) updates the weights $\theta$.
-
-The target comes from a separate target network with weights $\theta^-$, a copy of the online network refreshed every 1,000 steps:
-
-$$
-y = r + \gamma (1-d) \max_{a'} Q_{\text{target}}(s',a'; \theta^-)
-$$
-
-Here $d$ is 1 on an episode's final transition, after day 365, and 0 otherwise, so no future value is added beyond the end of the year. Holding the target fixed between refreshes stops the network from chasing its own changing estimates, which stabilises learning.
-
-The loss measures the gap between predicted values and their targets, $L(\theta) = \mathbb{E}\left[\ell\left(y - Q(s,a;\theta)\right)\right]$. The report describes $\ell$ as the squared error. Stable-Baselines3's DQN implementation uses the closely related Huber loss, which is quadratic for small errors and linear for large ones, limiting the influence of outliers.
+A DQN uses a neural network to estimate the value of each action in the current state. The agent stores its experience from the simulation and uses it to improve these estimates. During training, the network updates its weights to make its estimates more accurate. A second target network, which updates less often, keeps learning stable. The agent then selects the action with the highest estimated future reward.
 
 </Section>
 
 <Section title="Technical Implementation" kind="implementation">
 
-The supply chain equations are implemented in [Python](https://docs.python.org/3/), using NumPy for random sampling and variance calculations. The simulation is wrapped as a [Gymnasium](https://gymnasium.farama.org/) environment, which defines the 18-action discrete action space, the observation vector and the reset and step logic that any compatible RL library can use. [Stable-Baselines3](https://stable-baselines3.readthedocs.io/) provides the DQN implementation, the training loop, observation and reward normalisation, and the evaluation callback used to produce the learning curve.
+[Python](https://docs.python.org/3/) implements the supply chain simulation. [Gymnasium](https://gymnasium.farama.org/) provides the RL environment interface. [Stable-Baselines3](https://stable-baselines3.readthedocs.io/) implements and trains the DQN agent.
 
 </Section>
 
 <Section title="Results" kind="results">
 
-The results below focus on disruption scenario 5, in which Supplier A's capacity is halved and Route A is congested, each for 90 days. This is the scenario the report uses to track learning progress and to compare policies in detail.
-
 ### Learning curve
 
 <Figure src={learningCurve} width={1484} height={582} label="Figure 3" alt="Line chart of DQN episode reward against training timesteps from 0 to about 900,000. The mean reward line fluctuates mostly between minus 25,000 and plus 10,000, with deep dips near 220,000 and 600,000 timesteps, inside a wide shaded band of one standard deviation. A dashed rule-based baseline sits at 821 and a dashed fixed baseline at minus 98,291.">
-DQN learning curve showing mean episode reward against training timesteps, with fixed and rule-based baselines from disruption scenario 5.
+The DQN's mean episode reward during training under disruption scenario 5, with fixed and rule-based baselines.
 </Figure>
-
-The horizontal axis shows training timesteps (days of simulated experience), and the vertical axis shows episode reward, the sum of the 365 daily rewards. Every 10,000 steps, training paused and the current policy ran 10 evaluation episodes without exploration. The line shows their mean and the shaded band one standard deviation either side. The dashed lines are single reference episodes of the fixed and rule-based policies on scenario 5, computed separately from Table 3, so the rule-based value differs from the one shown there.
-
-Learning is visible but modest. In the first half of training, the mean sits mostly below the rule-based baseline and swings widely. Later it oscillates closer to the baseline and exceeds it at several checkpoints. Sharp drops near 220,000 and 600,000 steps show that the policy was still unstable. The spread is widest in the first part of training and generally narrower afterwards, although it stays large throughout. The DQN stays far above the fixed baseline at every checkpoint, which is expected, since the fixed policy never adapts.
 
 ### Policy performance comparison
 
-After training, the best checkpoint (the one with the highest mean evaluation reward) and the three baselines each ran one episode of scenario 5 under the same disruption timing.
-
-<TableScroll label="Table 3" caption="Policy performance comparison under disruption scenario 5 (one 365-day episode per policy). Fill rate, NSAmp, inventory and backlog are daily values averaged over the episode; inventory and backlog are in units. Reward is the training objective.">
+<TableScroll label="Table 2" caption="Policy performance under disruption scenario 5, one 365-day episode per policy. Inventory and backlog are in units.">
 <table>
 <thead>
 <tr><th scope="col">Policy</th><th scope="col" className="num">Average fill rate</th><th scope="col" className="num">Average NSAmp</th><th scope="col" className="num">Average inventory</th><th scope="col" className="num">Average backlog</th><th scope="col" className="num">Average reward</th><th scope="col" className="num">Total reward</th></tr>
@@ -257,65 +159,31 @@ After training, the best checkpoint (the one with the highest mean evaluation re
 </table>
 </TableScroll>
 
-- The DQN achieved the highest average fill rate (0.719 against 0.540 for the rule-based policy) and the lowest average backlog (26.7 units against 65.5).
-- It held much more inventory (54.2 units against 20.5) and had the highest NSAmp ratio of all four policies (32.09 against 11.36).
-- Its average and total rewards were worse than the rule-based policy's, despite the stronger fill rate, because the reward penalises the extra inventory and inventory variability.
-- The DQN is therefore not simply the best policy overall. It traded inventory stability for service level, and the reward function ranked that trade below the rule-based policy's more balanced outcome.
+The DQN had the highest fill rate and the lowest backlog, but the rule-based policy had a better average reward.
 
-### Policy behaviour and reward over time
+### Policy behaviour over time
 
 <Figure src={policyComparison} width={2086} height={3532} narrow label="Figure 4" alt="Six stacked time-series panels over 365 simulated days for the fixed, random, rule-based and DQN policies under scenario 5: fill rate, NSAmp, inventory, backlog, daily reward and cumulative reward. Shaded bands mark the Supplier A disruption from about day 103 to 192 and the Route A disruption from about day 271 to 360.">
-Daily fill rate, NSAmp, inventory, backlog, reward and cumulative reward for all four policies under scenario 5. Shading marks the Supplier A capacity disruption (about days 103 to 192) and the Route A traffic disruption (about days 271 to 360).
+Daily fill rate, NSAmp, inventory, backlog, reward and cumulative reward for all four policies under scenario 5, with the disruption periods shaded.
 </Figure>
-
-Figure 4 shows where the differences in Table 3 come from. During the Supplier A disruption, backlog under the fixed policy climbs above 1,000 units, and the random and rule-based policies also accumulate backlog. The DQN's backlog peaks earlier and lower and returns to near zero before the disruption ends, so its fill rate recovers to 1.0 while the rule-based policy's is still near zero.
-
-The cost appears in the inventory and NSAmp panels. From the second half of the Supplier A disruption onwards, the DQN holds larger and more volatile stock than any other policy. Its NSAmp ratio is also high from the first days of the episode: NSAmp is calculated over all days so far, so early swings in inventory keep it elevated, and the reward penalises it every day. The daily reward panel shows the DQN earning less than the other policies before the disruption and more during and after it. By the end of the year, the cumulative rewards of the DQN and the rule-based policy are close, with the rule-based policy slightly ahead, while the fixed policy falls to about −98,000.
 
 </Section>
 
 <Section title="Discussion and Limitations" kind="results">
 
-### Reward hacking and unstable actions
-
 <Figure src={policyActions} width={2086} height={1768} label="Figure 5" alt="Three step-chart panels over 365 days comparing the actions of the rule-based and DQN policies under scenario 5: supplier split alpha, route and safety stock. The rule-based policy changes only at the disruption boundaries, while the DQN switches between values many times throughout the year, including before any disruption begins.">
-Supplier split ($\alpha$), route and safety stock chosen each day by the rule-based policy and the DQN under scenario 5.
+Daily actions of the rule-based policy and the DQN under scenario 5: the DQN changes action much more often.
 </Figure>
 
-The rule-based policy changes its actions only when a disruption starts or ends. The DQN switches supplier split, route and safety stock many times, often from one day to the next and even before any disruption has begun, and it frequently selects the highest safety stock of 115 units. This is consistent with the DQN's higher inventory and NSAmp in Table 3, and it is the behaviour the report identifies as possible reward hacking: the agent found ways to earn reward that do not resemble a sensible operating policy.
-
-Two features of the design allow it. The reward places no cost on switching, and decisions are made daily, whereas real planning cycles are usually weekly or longer. The report proposes a switching penalty, which would also represent the real administrative and contractual cost of changing supplier or route, and a longer decision cadence. More broadly, the agent's behaviour should be judged against operational objectives, not against its reward alone.
-
-### Interpretability
-
-The DQN's decisions come from a neural network whose weights can be inspected but do not explain why a particular action was chosen. When a decision affects service levels, operating costs or disruption recovery, the people accountable for it need to understand and trust the reasoning. This opacity is a significant barrier to using deep RL for operational decisions.
-
-### Simplified environment
-
-The single-echelon simulation is a proof of concept, not a realistic model of a whole supply chain. It has one product, no manufacturing, no explicit costs and a daily decision cadence. The safety stock formula ignores lead-time variability, which likely contributed to fill rates staying below the 90% target. The training mix also skewed towards disruption: seven of the eight training scenarios were disrupted, and only Route A was ever congested. That probably explains why the DQN keeps switching routes even when there is no disruption. These findings should not be generalised directly to complex real-world networks.
-
-### Evaluation scope
-
-The results shown here are for scenario 5 only, with one episode per policy in the comparison table, so they show behaviour rather than a statistically tested ranking. Across the other scenarios, the dissertation reports a similar pattern: the DQN usually performs slightly below the rule-based policy and consistently above the fixed policy. It performed best overall in scenario 6, beat only the fixed policy in scenario 2, and performed worst of all four policies in scenario 0, where there is no disruption. On the unseen scenario 8, it reached an average fill rate of 0.618 against 0.731 for the rule-based policy, while clearly outperforming the fixed and random policies. This shows some generalisation, but not the robustness of the rule-based policy.
-
-### Future research
-
-These are proposed directions, not results of this experiment:
-
-- **Focused applications** where adaptive decisions add clear value, such as warehouse and inventory management, safety stock adjustment, disruption handling and dynamic logistics or rerouting.
-- **Multi-agent RL**, with separate cooperating agents for decisions such as supplier allocation, safety stock and routing, where the structure of the problem justifies several interacting decision-makers.
-- **Alternative algorithms**, such as Proximal Policy Optimisation (PPO), which other studies have found effective in more complex inventory settings and for continuous actions. Whether it would help here is untested.
-- **Explainable AI**, including SHAP, LIME, partial dependence plots and interpretable surrogate models such as Linear Model U-Trees, chosen to suit the model and the decision being explained.
-- **Human-in-the-loop oversight**, in which the agent recommends an action, a manager accepts or overrides it, and both are fed back into training, especially when the agent is uncertain or the stakes are high.
+- **Reward hacking.** The DQN showed signs of reward hacking and frequent action switching. The reward function needs more work, for example a penalty for switching.
+- **Interpretability.** A deep neural network does not explain why the agent selects a particular action.
+- **Simulation limitations.** The single-echelon supply chain is a simplified proof of concept. Its results do not show performance in a real supply chain.
+- **Future research.** Targeted supply chain applications, multi-agent RL where appropriate, alternative algorithms such as PPO, explainable AI and human oversight.
 
 </Section>
 
 <Section title="Lessons Learned" kind="context">
 
-The main lesson for me is that RL and agentic AI have promising applications in specific areas of supply chain management, particularly where decisions must adapt to changing conditions. An entire supply chain, however, is usually too complex to manage effectively with one monolithic learning approach. Even this deliberately small simulation produced an agent that met demand better than the alternatives but behaved in ways no planner would sign off.
-
-The more promising direction is to identify the right technique for each decision problem, combining RL with classical machine learning, mathematical optimisation and rule-based systems. Where deep learning is used for operational decisions, explainability, careful reward design, robust evaluation against operational KPIs and human oversight belong in the solution from the start, not as additions afterwards.
-
-That brings me back to the original motivation. For logistics control tower and digital twin software, the opportunity I see is not a fully autonomous controller but targeted, explainable decision support built into the tools planners already use. This project is a first step in exploring that, not a production-ready system.
+RL can be useful for specific supply chain decisions, but one approach is unlikely to manage an entire supply chain. The better approach is to combine RL with classical machine learning, optimisation and rule-based methods, each where it fits. When deep learning makes operational decisions, explainability and human oversight are essential. For logistics control tower and digital twin software, I see the opportunity in targeted, explainable decision support, not a fully autonomous controller.
 
 </Section>
