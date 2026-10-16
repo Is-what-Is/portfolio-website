@@ -100,6 +100,10 @@
     font-weight: 700;
   }
 
+  .prose > h3:first-child {
+    margin-top: 0;
+  }
+
   .prose :is(ul, ol) {
     padding-left: 1.25rem;
   }
@@ -140,7 +144,7 @@
   }
 
   /* Text stays at reading width; figures and tables may use the full column. */
-  .prose > :not(figure, .table-block, .katex-display) {
+  .prose > :not(figure, .table-block) {
     max-width: var(--container-prose);
   }
 
@@ -201,11 +205,23 @@
     padding-right: 0;
   }
 
-  /* KaTeX output: long display equations scroll rather than overflow. */
-  .prose .katex-display {
+  /*
+   * KaTeX display equations: centred within the text column, with even
+   * spacing; long equations scroll rather than overflow.
+   */
+  .prose > .katex-display {
+    margin-block: 1.5rem;
     overflow-x: auto;
     overflow-y: hidden;
     padding: 0.5rem 0;
+    text-align: center;
+  }
+
+  /* Fit typical equations on phone screens without sideways scrolling. */
+  @media (max-width: 40rem) {
+    .prose > .katex-display {
+      font-size: 0.72em;
+    }
   }
 
   .prose .katex {
