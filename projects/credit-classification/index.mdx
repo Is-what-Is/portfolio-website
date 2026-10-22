@@ -1,66 +1,519 @@
 {/*
-  Project write-up. Replace each <Placeholder> with real content.
-  Ordinary Markdown works inside a <Section>: paragraphs, lists, links,
-  images, tables and code blocks. Keep the blank lines around the content.
-  kind is one of: context, theory, implementation, results, interactive.
+  Project write-up: Credit Classification (ECMM445 Learning from Data, MSc).
+  Source of truth: ECMM445.ipynb in the credit-classification repository.
+  Style: ASD-STE100 Simplified Technical English. Short sentences, one idea
+  per sentence, active voice, terms explained at first use.
+  Class labels (verified in the notebook):
+    binary models: Poor = 0, Good = 1 (Standard removed)
+    decision tree: Poor = 0, Standard = 1, Good = 2
+  Keep the blank lines around Markdown inside JSX.
+  Maths: $inline$ and $$display$$ are rendered by KaTeX at build time.
 */}
+
+import histogram from "./figures/numeric-columns-histogram.png";
+import boxplot from "./figures/numeric-columns-boxplot.png";
+import correlationMatrix from "./figures/correlation-matrix.png";
+import logisticDiagram from "./figures/logistic-function-diagram.png";
+import simpleLogistic from "./figures/simple-logistic-regressions.png";
+import logisticConfusion from "./figures/final-logistic-regression-confusion-matrix.png";
+import rocCurve from "./figures/roc-curve.png";
+import perceptronDiagram from "./figures/perceptron-diagram.png";
+import perceptronConfusion from "./figures/perceptron-final.png";
+import treeDiagram from "./figures/decision-tree-diagram.png";
+import defaultTree from "./figures/default-tree.png";
+import finalTree from "./figures/final-tree.png";
 
 <Section title="Background and Motivation" kind="context">
 
-<Placeholder>Why this project exists and what prompted it.</Placeholder>
+Online banking increases the amount of customer data that is available for credit assessment. Lenders must assess potential borrowers and make credit decisions with reliable methods.
+
+Machine learning can use this data to support credit decisions. It does not replace a full credit assessment.
 
 </Section>
 
 <Section title="Problem Statement" kind="context">
 
-<Placeholder>The question being answered or the task being solved.</Placeholder>
+> Can machine learning classification models accurately predict a person's credit rating?
 
 </Section>
 
 <Section title="Data" kind="implementation">
 
-<Placeholder>Where the data came from, its size and shape, and how it was prepared.</Placeholder>
+The project uses the open-source <a href="https://www.kaggle.com/datasets/parisrohan/credit-score-classification" target="_blank" rel="noopener noreferrer">Credit Score Classification dataset on Kaggle<span className="sr-only"> (opens in a new tab)</span></a>. The data contains customer information, financial characteristics, payment behaviour and a credit rating label for each record.
+
+The dataset has two CSV files:
+
+- **Training file.** 100,000 records and 28 attributes, including the `Credit_Score` label.
+- **Test file.** 50,000 records and 27 attributes. This file has no `Credit_Score` label. This project did not use the test file.
+
+<TableScroll label="Table 1" caption="Dataset attributes. Column names are as in the source files.">
+<table>
+<thead>
+<tr><th scope="col">Attribute</th><th scope="col">Description</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row"><code>ID</code></th><td>Unique identifier for a data entry.</td></tr>
+<tr><th scope="row"><code>Customer_ID</code></th><td>Unique identifier for a customer.</td></tr>
+<tr><th scope="row"><code>Month</code></th><td>Month associated with the record.</td></tr>
+<tr><th scope="row"><code>Name</code></th><td>Customer's name.</td></tr>
+<tr><th scope="row"><code>Age</code></th><td>Customer's age.</td></tr>
+<tr><th scope="row"><code>SSN</code></th><td>Customer's Social Security Number.</td></tr>
+<tr><th scope="row"><code>Occupation</code></th><td>Customer's occupation.</td></tr>
+<tr><th scope="row"><code>Annual_Income</code></th><td>Customer's annual income.</td></tr>
+<tr><th scope="row"><code>Monthly_Inhand_Salary</code></th><td>Customer's monthly base salary.</td></tr>
+<tr><th scope="row"><code>Num_Bank_Accounts</code></th><td>Number of bank accounts held by the customer.</td></tr>
+<tr><th scope="row"><code>Num_Credit_Card</code></th><td>Number of credit cards held by the customer.</td></tr>
+<tr><th scope="row"><code>Interest_Rate</code></th><td>Interest rate on credit cards.</td></tr>
+<tr><th scope="row"><code>Num_of_Loan</code></th><td>Number of loans taken from a bank.</td></tr>
+<tr><th scope="row"><code>Type_of_Loan</code></th><td>Types of loans taken by the customer.</td></tr>
+<tr><th scope="row"><code>Delay_from_due_date</code></th><td>Average number of days a payment is late.</td></tr>
+<tr><th scope="row"><code>Num_of_Delayed_Payment</code></th><td>Average number of delayed payments.</td></tr>
+<tr><th scope="row"><code>Changed_Credit_Limit</code></th><td>Percentage change in the credit card limit.</td></tr>
+<tr><th scope="row"><code>Num_Credit_Inquiries</code></th><td>Number of credit inquiries about the customer.</td></tr>
+<tr><th scope="row"><code>Credit_Mix</code></th><td>Classification of the customer's credit mix.</td></tr>
+<tr><th scope="row"><code>Outstanding_Debt</code></th><td>Remaining debt, measured in USD.</td></tr>
+<tr><th scope="row"><code>Credit_Utilization_Ratio</code></th><td>Proportion of available credit currently used.</td></tr>
+<tr><th scope="row"><code>Credit_History_Age</code></th><td>Length of the customer's credit history.</td></tr>
+<tr><th scope="row"><code>Payment_of_Min_Amount</code></th><td>Indicates whether the customer paid only the minimum amount due.</td></tr>
+<tr><th scope="row"><code>Total_EMI_per_month</code></th><td>Total monthly Equated Monthly Instalment (EMI) payments, measured in USD.</td></tr>
+<tr><th scope="row"><code>Amount_invested_monthly</code></th><td>Amount invested by the customer each month, measured in USD.</td></tr>
+<tr><th scope="row"><code>Payment_Behaviour</code></th><td>Customer spending and payment patterns.</td></tr>
+<tr><th scope="row"><code>Monthly_Balance</code></th><td>Customer's monthly balance, measured in USD.</td></tr>
+<tr><th scope="row"><code>Credit_Score</code></th><td>Credit rating category: Poor, Standard or Good.</td></tr>
+</tbody>
+</table>
+</TableScroll>
 
 </Section>
 
-<Section title="Methodology" kind="theory">
+<Section title="Methodology: Google Data Analytics Framework" highlight="Methodology" kind="theory">
 
-<Placeholder>The approach taken and why it was chosen over alternatives.</Placeholder>
+The project follows the phases of the Google Data Analytics framework. The first phase, Ask, is the Problem Statement above. The other five phases are Prepare, Process, Analyse, Share and Act.
+
+### 1. Prepare
+
+The training and test CSV files were loaded and combined into one pandas DataFrame for data preparation and analysis.
+
+The test file has no `Credit_Score` labels. Thus, all its rows were removed when rows without a label were removed (Process, step 2). All models therefore use records from the training file only. Each model has its own split into a training set and a test set (Process, step 10).
+
+### 2. Process
+
+1. **Check completeness.** Find the number of missing values in each column.
+2. **Remove missing values.** Remove rows that have no `Credit_Score`. After type conversion, remove all rows that still have a missing value.
+3. **Convert data types.** Some numeric columns contain text errors. Convert them to numbers with coercion, which changes values that are not valid numbers to missing values. Change `Credit_History_Age` from text (for example, "22 Years and 1 Months") to whole years. Change `Occupation`, `Payment_of_Min_Amount` and `Payment_Behaviour` to dummy variables, which are 0/1 columns, one for each category.
+4. **Remove invalid values and outliers.** Remove impossible values, such as a negative age, an age of 100 or more, or a negative number of loans. Then remove rows above an upper limit of median + 5 × IQR for seven features with extreme values. IQR is the interquartile range.
+5. **Describe the data.** Calculate descriptive statistics. Examine the distribution of each numeric variable (Figures 1 and 2).
+6. **Find multicollinearity.** Make a correlation matrix (Figure 3). Multicollinearity occurs when two or more features have a strong linear relationship. `Annual_Income` and `Monthly_Inhand_Salary` have a correlation of 1.0, so `Annual_Income` was removed from the binary models.
+7. **Remove fields that the prediction does not need.** Remove `ID`, `Customer_ID`, `Month`, `Name` and `SSN`. Also remove `Type_of_Loan`, which has too many category combinations, and `Credit_Mix`, which is very similar to the target.
+8. **Make one dataset for each task.** The binary dataset has 21,740 records. The three-class dataset has 51,038 records.
+9. **Prepare the targets.** For logistic regression and the perceptron, Poor = 0 and Good = 1. These models do not use the Standard category. For the decision tree, Poor = 0, Standard = 1 and Good = 2.
+10. **Split the data.** The binary models use a random 70/30 split into training and test sets (6,522 test records). Each binary model has its own random split, so the test sets are not identical. The decision tree uses a stratified 75/25 split (12,760 test records).
+
+The binary models do not use the Standard category, so they cannot classify a Standard customer. Standard is the largest category: 27,373 of the 51,038 records in the three-class dataset. To separate Poor from Good is also an easier task than to separate three classes. Thus, binary results and three-class results are not directly comparable.
+
+<Figure src={histogram} width={1500} height={500} label="Figure 1" alt="Ten histograms of numeric columns: Age, Annual_Income, Monthly_Inhand_Salary, Num_Bank_Accounts, Num_Credit_Card, Interest_Rate, Num_of_Loan, Delay_from_due_date, Num_of_Delayed_Payment and Changed_Credit_Limit. Age, salary, delay and credit limit change have spread distributions. The other six show almost all values in one bar near zero, because a few extreme values stretch the axis.">
+Histograms of ten numeric columns after the removal of impossible values and before the removal of outliers.
+</Figure>
+
+<Figure src={boxplot} width={1500} height={1000} label="Figure 2" alt="Ten box plots of the same numeric columns. Most columns have many outliers far above the box. For example, Interest_Rate reaches almost 6,000 and Num_Bank_Accounts reaches about 1,800. Age has one outlier near 100.">
+Box plots of the same columns. The extreme values show the need for outlier removal.
+</Figure>
+
+<Figure src={correlationMatrix} width={4000} height={4000} label="Figure 3" alt="Correlation matrix of all binary-dataset features, coloured from blue (negative) to red (positive). Annual_Income and Monthly_Inhand_Salary have a correlation of 1.0. Credit_Score has negative correlations with Interest_Rate (−0.62), Outstanding_Debt (−0.53) and Payment_of_Min_Amount_Yes (−0.58), and a positive correlation with Payment_of_Min_Amount_No (0.59).">
+Correlation matrix of the binary dataset after outlier removal. Red shows positive correlation and blue shows negative correlation.
+</Figure>
+
+### 3. Analyse
+
+The models were evaluated with confusion matrices and classification metrics. A confusion matrix compares the actual class of each test record with the predicted class.
+
+For a binary model, one class is the positive class. The other class is the negative class. In this project, Good is the positive class for the ROC curve. A classification report calculates precision, recall and F1-score for each class in turn, with that class as the positive class.
+
+The four cells of a confusion matrix are:
+
+- **TP (true positive).** The record is positive and the model predicts positive.
+- **TN (true negative).** The record is negative and the model predicts negative.
+- **FP (false positive).** The record is negative, but the model predicts positive.
+- **FN (false negative).** The record is positive, but the model predicts negative.
+
+"True" or "False" tells if the prediction is correct. "Positive" or "Negative" is the predicted class.
+
+<TableScroll label="Table 2" caption="Layout of a binary confusion matrix. Rows show the actual class. Columns show the predicted class.">
+<table>
+<thead>
+<tr><td></td><th scope="col">Predicted positive</th><th scope="col">Predicted negative</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Actual positive</th><td>TP (correct)</td><td>FN (missed positive)</td></tr>
+<tr><th scope="row">Actual negative</th><td>FP (false alarm)</td><td>TN (correct)</td></tr>
+</tbody>
+</table>
+</TableScroll>
+
+The scikit-learn plots in this write-up show class 0 in the first row and column. With Good (1) as the positive class, the bottom-right cell is TP and the top-left cell is TN.
+
+**Accuracy** is the proportion of all predictions that are correct.
+
+$$
+\text{Accuracy}=\frac{TP+TN}{TP+TN+FP+FN}
+$$
+
+Use accuracy when both classes are important and the classes are approximately balanced. When one class is much more common, accuracy can be misleading. A model that always predicts the common class can have a high accuracy.
+
+**Precision** is the proportion of positive predictions that are correct.
+
+$$
+\text{Precision}=\frac{TP}{TP+FP}
+$$
+
+Use precision when a false positive has a high cost.
+
+**Recall** is the proportion of actual positive cases that the model finds.
+
+$$
+\text{Recall}=\frac{TP}{TP+FN}
+$$
+
+Use recall when a false negative has a high cost and the model must find as many positive cases as possible.
+
+**F1-score** is the harmonic mean of precision and recall.
+
+$$
+F1=2\,\frac{\text{Precision}\times\text{Recall}}{\text{Precision}+\text{Recall}}
+$$
+
+Use F1-score when precision and recall are both important and one summary value is useful.
+
+**Specificity** is the proportion of actual negative cases that the model identifies correctly.
+
+$$
+\text{Specificity}=\frac{TN}{TN+FP}
+$$
+
+Use specificity when the correct identification of negative cases is important.
+
+These metrics have trade-offs. If the decision threshold changes so that the model predicts the positive class more often, recall usually increases and precision usually decreases. The best metric depends on the cost of each type of error. For a lender, an FP can be a loan to a high-risk customer. An FN can be a refusal to a good customer.
+
+### 4. Share
+
+The Video Explanation and the Theory, Implementation and Results section below show the findings.
+
+### 5. Act
+
+The next stage adds a random forest model and an interactive Python application for credit rating classification. These enhancements are not complete. Their sections below are placeholders.
 
 </Section>
 
-<Section title="Theoretical Foundations" kind="theory">
+<Section title="Theory, Implementation and Results" kind="results">
 
-<Placeholder>The theory the method rests on.</Placeholder>
+### Logistic Regression
+
+#### Theory
+
+Logistic regression estimates the probability of a binary outcome from input features. The process has four steps:
+
+1. The model calculates a weighted sum of the input features, $z = b + \boldsymbol{\beta}^{T}\mathbf{x}$. Here, $b$ is the intercept, $\boldsymbol{\beta}$ is the vector of coefficients and $\mathbf{x}$ is the vector of input features. The value $z$ is the log-odds of class 1.
+2. It applies the sigmoid function to $z$.
+3. The sigmoid function changes $z$ to a probability between zero and one.
+4. A decision threshold changes the probability to a predicted class. If the probability is equal to or more than the threshold, the model predicts class 1. The threshold can be adjusted. For example, with a threshold of 0.9, the model classifies a record as Good only if the predicted probability of Good is 0.9 or more. This project used the scikit-learn default threshold of 0.5.
+
+$$
+\sigma(z)=\frac{1}{1+e^{-z}}
+$$
+
+<Figure src={logisticDiagram} width={570} height={306} label="Figure 4" narrow alt="Diagram that compares a straight blue line, the linear model y = b0 + b1 x, with an orange S-shaped curve, the logistic model p = 1 / (1 + e^-(b0 + b1 x)). The straight line goes below 0 and above 1. The S-curve stays between 0 and 1.">
+A linear model can predict values below 0 or above 1. The logistic model keeps the output between 0 and 1, so it can be a probability.
+</Figure>
+
+Training finds the values of $b$ and $\boldsymbol{\beta}$ that minimise binary cross-entropy, also called log loss. Here, $y_i$ is the actual class (0 or 1) and $p_i$ is the predicted probability of class 1 for record $i$ of $n$:
+
+$$
+L=-\frac{1}{n}\sum_{i=1}^{n}\left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right]
+$$
+
+Log loss gives a large penalty to a confident prediction that is wrong. It is not the same as the mean squared error, which linear regression usually minimises. There is no closed-form solution, so the training uses an iterative optimisation method. In this case, the scikit-learn `liblinear` solver was used.
+
+**Regularisation** adds a penalty to the loss. The penalty makes large coefficients less likely and can reduce overfitting. In scikit-learn, the parameter $C$ is the inverse of the penalty strength $\lambda$: a smaller $C$ gives a stronger penalty.
+
+- **L1 (Lasso) regularisation** adds a penalty based on the absolute values of the coefficients, $\lambda\sum_j |\beta_j|$. It can make some coefficients exactly zero. Thus, it can reduce model complexity and help select features.
+- **L2 (Ridge) regularisation** adds a penalty based on the squared coefficients, $\lambda\sum_j \beta_j^2$. It makes coefficients smaller but usually not zero.
+
+#### Implementation
+
+The first experiments used four simple logistic regression models, LR1 to LR4. Each model has one independent variable. Their test accuracies were between 0.69 (salary) and 0.79 (interest rate).
+
+<Figure src={simpleLogistic} width={1200} height={1000} label="Figure 5" alt="Four scatter plots, LR1 to LR4. Each plot shows the credit rating, 0 for Poor or 1 for Good, against one feature, with a red fitted logistic curve. LR1, monthly in-hand salary: the probability of Good increases slowly with salary. LR2, delay from due date: the probability decreases to near zero at 40 days. LR3, outstanding debt: the probability decreases to near zero at about 3,000 USD. LR4, interest rate: the probability decreases quickly to near zero at about 20%.">
+Four simple logistic regressions, each fitted to one feature. The red curve is the predicted probability of a Good rating.
+</Figure>
+
+Next, a model with all features was trained. `Annual_Income` and `Monthly_Inhand_Salary` are perfectly correlated, and this made the coefficients unstable. `Annual_Income` was removed. All features were standardised (scaled to a mean of 0 and a standard deviation of 1).
+
+L1 regularisation was then used to find features with small effects. **Grid search with cross-validation** selected the value of $C$:
+
+- Grid search tests a defined set of hyperparameter values. A hyperparameter is a setting that is chosen before training.
+- Cross-validation divides the training data into $k$ parts, called folds.
+- The model is trained on $k-1$ folds and validated on the remaining fold. This repeats until each fold has been the validation fold once.
+- The selected value has the best mean score on the validation folds.
+
+The L1 search tested 100 values of $C$ from $10^{-5}$ to $10^{0.5}$, with 3-fold cross-validation and accuracy as the score. The best value was $C \approx 0.245$, with a mean cross-validation accuracy of 0.848.
+
+The L1 coefficients and the p-values of a statsmodels logistic regression were then used to select features. The occupation features were not statistically significant, so they were removed. The final model uses 15 features: `Monthly_Inhand_Salary`, `Outstanding_Debt`, `Num_Credit_Card`, `Interest_Rate`, `Num_of_Delayed_Payment`, `Delay_from_due_date`, `Num_of_Loan`, two `Payment_of_Min_Amount` dummy variables and six `Payment_Behaviour` dummy variables.
+
+The final model uses **L2 regularisation**, because all 15 features were kept. A second grid search tested 100 values of $C$ from $10^{-5}$ to $10$, with 5-fold cross-validation and accuracy as the score. The best value was $C \approx 0.351$, with a mean cross-validation accuracy of 0.841. The final model uses unscaled features.
+
+#### Results
+
+<Figure src={logisticConfusion} width={1064} height={918} label="Figure 6" narrow alt="Confusion matrix of the final logistic regression model, accuracy 0.84. Actual Poor (0): 3,458 predicted Poor and 636 predicted Good. Actual Good (1): 401 predicted Poor and 2,027 predicted Good.">
+Confusion matrix of the final logistic regression model. 0 = Poor, 1 = Good. With Good as the positive class: TN = 3,458, FP = 636, FN = 401 and TP = 2,027. The plot title shows the name of an earlier model (SCLR). The values are from the final model.
+</Figure>
+
+<ClassificationReport
+  label="Table 3"
+  caption="Classification report for the final logistic regression model on 6,522 test records. 0 = Poor, 1 = Good."
+  classes={[
+    ["0 (Poor)", 0.90, 0.84, 0.87, 4094],
+    ["1 (Good)", 0.76, 0.83, 0.80, 2428],
+  ]}
+  accuracy={[0.84, 6522]}
+  macro={[0.83, 0.84, 0.83, 6522]}
+  weighted={[0.85, 0.84, 0.84, 6522]}
+/>
+
+- **Poor (0): precision 0.90.** Of the records predicted as Poor, 90% are Poor.
+- **Poor (0): recall 0.84.** The model finds 84% of the actual Poor records.
+- **Good (1): precision 0.76.** Of the records predicted as Good, 76% are Good.
+- **Good (1): recall 0.83.** The model finds 83% of the actual Good records.
+- **F1-scores** of 0.87 (Poor) and 0.80 (Good) show the balance between precision and recall for each class.
+- **Accuracy** is 0.84. The model classifies 84% of the 6,522 test records correctly.
+- **Averages.** The macro average gives equal weight to each class. The weighted average gives weight by the number of records in each class.
+
+With Good as the positive class, the specificity is the recall for Poor: 3,458 / 4,094 = 0.84.
+
+<Figure src={rocCurve} width={500} height={500} label="Figure 7" narrow alt="ROC curve for the final logistic regression model, with Good as the positive class. The curve rises steeply to a true positive rate of about 0.9 at a false positive rate of about 0.2, then flattens near 1.0. The area under the curve is 0.91. A dashed diagonal line shows a random guess with an area of 0.5.">
+ROC curve for the final logistic regression model. Good is the positive class.
+</Figure>
+
+The receiver operating characteristic (ROC) curve shows the true positive rate (recall) against the false positive rate (1 − specificity) at different decision thresholds.
+
+The area under the ROC curve (AUC) is 0.91, with 1 being the best score possible and 0.5 the score of a random guess. This shows strong separation between Good and Poor records in this test set. The AUC is not the proportion of correct predictions.
+
+A lender can use the model to find potential credit candidates (Good) for further assessment. In this case, a missed Good customer is a false negative. A lower decision threshold increases the recall for Good. It also increases the number of false positives, so a further assessment stage is necessary.
+
+---
+
+### Perceptron
+
+#### Theory
+
+<Figure src={perceptronDiagram} width={1050} height={568} label="Figure 8" alt="Perceptron diagram. A bias input b and inputs X1 to Xn connect through weights w1 to wn to one unit. The unit calculates z = b + the sum of wi xi, then applies a threshold function f(z). The output y is 1 or 0. The error y − ŷ gives a weight change Δw = α(error)xk, and the weights are updated as wk+1 = wk + Δwk.">
+A perceptron. The unit calculates a weighted sum of the inputs, applies a threshold function and uses the error to update the weights.
+</Figure>
+
+A perceptron is a simple neural model with one computational unit. It multiplies each input feature by a learned weight, adds a bias and applies an activation function:
+
+$$
+z=\mathbf{w}^{T}\mathbf{x}+b
+$$
+
+$$
+\hat{y}=f(z)=\begin{cases}1 & \text{if } z>0\\ 0 & \text{otherwise}\end{cases}
+$$
+
+The activation function changes $z$ into the output of the unit. A classic perceptron, as in this project, uses a threshold (step) function. Multilayer neural networks often use other activation functions. Examples are ReLU in hidden layers, sigmoid for a binary output and softmax for a multi-class output. The weights show how much each feature contributes to $z$, and thus to the decision boundary.
+
+This project uses the scikit-learn `Perceptron`. It trains with stochastic gradient descent (SGD), one record at a time, on the perceptron loss. With the classes written as $y_i \in \{-1, +1\}$, the loss for a record is:
+
+$$
+L_i=\max\left(0,\,-y_i z_i\right)
+$$
+
+The loss is zero for a correct prediction. For a wrong prediction, the weights change:
+
+$$
+\mathbf{w} \leftarrow \mathbf{w} + \eta\, y_i\, \mathbf{x}_i, \qquad b \leftarrow b + \eta\, y_i
+$$
+
+The learning rate $\eta$ (`eta0` in scikit-learn) controls the size of each update. Figure 8 shows the same rule for classes 0 and 1: $\Delta w = \eta(y-\hat{y})x$. The diagram uses the symbol $\alpha$ for the learning rate. In scikit-learn, `alpha` is the regularisation strength. Training stops after `max_iter` passes over the data, or when the loss improves by less than `tol`.
+
+#### Implementation
+
+The first perceptron used all 39 features of the binary dataset, with L1 regularisation. L1 regularisation pushes weights to zero, so it can help select features.
+
+Grid search with 2-fold cross-validation and accuracy as the score selected the hyperparameters.
+
+Some weights in this model were zero, for example most of the occupation features. A feature with a zero weight does not contribute directly to the linear decision function. A non-zero weight does not prove that a feature is important in general. The features were not standardised, so the size of a weight also depends on the scale of its feature.
+
+After this step, a subset of 29 features was selected and used to train the perceptron with no regularisation penalty. This final model used manually set hyperparameters, not the grid search values.
+
+#### Results
+
+<Figure src={perceptronConfusion} width={1012} height={914} label="Figure 9" narrow alt="Confusion matrix of the final perceptron, accuracy 0.79. Actual Poor (0): 3,352 predicted Poor and 802 predicted Good. Actual Good (1): 554 predicted Poor and 1,814 predicted Good.">
+Confusion matrix of the final perceptron. 0 = Poor, 1 = Good.
+</Figure>
+
+<ClassificationReport
+  label="Table 4"
+  caption="Classification report for the final perceptron on 6,522 test records. 0 = Poor, 1 = Good."
+  classes={[
+    ["0 (Poor)", 0.86, 0.81, 0.83, 4154],
+    ["1 (Good)", 0.69, 0.77, 0.73, 2368],
+  ]}
+  accuracy={[0.79, 6522]}
+  macro={[0.78, 0.79, 0.78, 6522]}
+  weighted={[0.80, 0.79, 0.79, 6522]}
+/>
+
+- The accuracy is 0.79 on 6,522 test records.
+- Poor (0) has an F1-score of 0.83.
+- Good (1) has an F1-score of 0.73.
+- Good has lower precision (0.69) and lower recall (0.77) than Poor.
+- Thus, the performance is different for the two classes. The perceptron is less accurate than logistic regression for both classes.
+
+---
+
+### Decision Tree
+
+#### Theory
+
+<Figure src={treeDiagram} width={275} height={387} label="Figure 10" narrow alt="Decision tree diagram. A root node splits on Yes and No into two internal nodes. One internal node tests Age ≤ 30 and the other tests Income > 50k. Each test leads to two leaf nodes that give Class A or Class B.">
+Parts of a decision tree: the root node, internal nodes that test features, and leaf nodes that give a class.
+</Figure>
+
+A decision tree makes a prediction with a sequence of rules. Each internal node tests a feature. Each branch is one outcome of the test. A leaf node gives the predicted class.
+
+The tree uses Gini impurity to measure how mixed the classes are in a node:
+
+$$
+G=1-\sum_{k=1}^{K}p_k^2
+$$
+
+Here, $p_k$ is the proportion of class $k$ in the node, and $K$ is the number of classes. A Gini impurity of zero means that all samples in the node are in one class. A higher value shows a greater mixture of classes.
+
+At each node, the algorithm evaluates the possible splits and selects the split that gives the largest decrease in impurity. This method is greedy: it selects each split for its immediate improvement only. Thus, it does not guarantee the best possible tree.
+
+#### Implementation
+
+The decision tree uses three target classes:
+
+- Poor = 0
+- Standard = 1
+- Good = 2
+
+After cleaning, the three-class dataset has 51,038 records. The class counts for the full dataset, before the split, are:
+
+- Class 0 (Poor): 14,933
+- Class 1 (Standard): 27,373
+- Class 2 (Good): 8,732
+
+The split into training and test sets is stratified. Stratified sampling keeps the class proportions the same in the training set and the test set. This makes the test results more reliable. Stratification does not correct class imbalance. Standard is still more than half of each set.
+
+The first tree used the scikit-learn default hyperparameters on all 42 features. It has a depth of 38 levels and 7,354 leaf nodes (Figure 11). A tree of this size is difficult to interpret and can overfit, because it can learn details of the training data that do not apply to new data.
+
+<Figure src={defaultTree} width={1000} height={1000} label="Figure 11" alt="A very large decision tree with thousands of small coloured nodes in dense rows. The individual nodes and their labels are too small to read.">
+The default tree: 38 levels and 7,354 leaf nodes.
+</Figure>
+
+Grid search with 2-fold cross-validation was then used to tune the tree. The search tested these controls:
+
+- **Maximum depth** (`max_depth`): the maximum number of levels.
+- **Maximum features** (`max_features`): the number of features considered at each split.
+- **Maximum leaf nodes** (`max_leaf_nodes`).
+- **Minimum impurity decrease** (`min_impurity_decrease`): the smallest decrease in impurity that a split must give.
+- **Minimum samples** per leaf (`min_samples_leaf`) and per split (`min_samples_split`).
+- **Cost-complexity pruning** (`ccp_alpha`): a penalty that removes branches that add little.
+
+The tuned tree used all 42 features, a maximum depth of 10, 15 features at each split, a maximum of 20 leaf nodes, at least 10 samples in each leaf and `ccp_alpha` = 0.0001. Table 5 shows its results.
+
+Feature importance measures how much each feature decreases impurity across all the splits in the fitted tree. The feature importance values were used to select 11 features. A second grid search tuned a final tree on these 11 features. The final tree has a depth of 8 and 20 leaf nodes (Figure 12).
+
+<Figure src={finalTree} width={2000} height={2000} label="Figure 12" alt="The final decision tree with 20 leaf nodes. The root node splits on Outstanding_Debt ≤ 1500.005. Lower splits use Payment_of_Min_Amount_Yes, Interest_Rate, Changed_Credit_Limit, Num_Credit_Card, Delay_from_due_date, Num_Bank_Accounts and Num_of_Delayed_Payment. Leaf colours show the predicted class: green for Standard, orange for Poor and purple for Good.">
+The final tree with 11 features. Green leaves predict Standard, orange leaves predict Poor and purple leaves predict Good. Open the full-size image to read the split rules.
+</Figure>
+
+#### Results
+
+<ClassificationReport
+  label="Table 5"
+  caption="Classification report for the tuned decision tree with all 42 features, on 12,760 test records. 0 = Poor, 1 = Standard, 2 = Good."
+  classes={[
+    ["0 (Poor)", 0.70, 0.59, 0.64, 3733],
+    ["1 (Standard)", 0.64, 0.85, 0.73, 6844],
+    ["2 (Good)", 0.77, 0.17, 0.28, 2183],
+  ]}
+  accuracy={[0.66, 12760]}
+  macro={[0.70, 0.54, 0.55, 12760]}
+  weighted={[0.68, 0.66, 0.63, 12760]}
+/>
+
+- The accuracy is 0.66 on 12,760 test records.
+- Poor (0) has an F1-score of 0.64.
+- Standard (1) has an F1-score of 0.73 and a recall of 0.85.
+- Good (2) has a precision of 0.77 but a recall of only 0.17.
+- The low recall for Good means that the model misses most actual Good records.
+- The macro F1-score of 0.55 shows that the performance is not equal across the three classes.
+- The weighted F1-score of 0.63 gives weight by the number of test records in each class.
+
+The classes are not balanced. Standard is 54% of the test set and Good is 17%. This imbalance can bias the tree towards Standard. It is possibly not the only cause of the low recall for Good. Other factors, such as the limits on tree size, can also have an effect.
+
+---
+
+### Model comparison
+
+<TableScroll label="Table 6" caption="Test results for the three models. The binary and three-class tasks are different, so their accuracies are not directly comparable.">
+<table>
+<thead>
+<tr><th scope="col">Model</th><th scope="col">Task</th><th scope="col" className="num">Test records</th><th scope="col" className="num">Accuracy</th><th scope="col" className="num">Macro F1-score</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Logistic regression</th><td>Binary: Poor, Good</td><td className="num">6,522</td><td className="num">0.84</td><td className="num">0.83</td></tr>
+<tr><th scope="row">Perceptron</th><td>Binary: Poor, Good</td><td className="num">6,522</td><td className="num">0.79</td><td className="num">0.78</td></tr>
+<tr><th scope="row">Decision tree</th><td>Three-class: Poor, Standard, Good</td><td className="num">12,760</td><td className="num">0.66</td><td className="num">0.55</td></tr>
+</tbody>
+</table>
+</TableScroll>
 
 </Section>
 
 <Section title="Technical Implementation" kind="implementation">
 
-<Placeholder>How it was built: tools, structure and notable engineering decisions.</Placeholder>
+The project is one Jupyter notebook in Python. It uses these libraries:
+
+<TableScroll label="Table 7" caption="Python libraries used in the notebook.">
+<table>
+<thead>
+<tr><th scope="col">Library</th><th scope="col">Use in this project</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">[scikit-learn](https://scikit-learn.org/stable/)</th><td>Data splits, feature scaling, the three models, grid search with cross-validation and evaluation metrics.</td></tr>
+<tr><th scope="row">[pandas](https://pandas.pydata.org/docs/)</th><td>Load the CSV files, clean the data and make dummy variables.</td></tr>
+<tr><th scope="row">[NumPy](https://numpy.org/doc/stable/)</th><td>Numeric arrays and hyperparameter ranges.</td></tr>
+<tr><th scope="row">[Matplotlib](https://matplotlib.org/stable/)</th><td>Histograms, box plots, the correlation matrix, model curves and tree plots.</td></tr>
+<tr><th scope="row">[SciPy](https://docs.scipy.org/doc/scipy/)</th><td>Interquartile range for the outlier limits.</td></tr>
+<tr><th scope="row">[statsmodels](https://www.statsmodels.org/stable/)</th><td>P-values of the logistic regression coefficients for feature selection.</td></tr>
+</tbody>
+</table>
+</TableScroll>
 
 </Section>
 
-<Section title="Results" kind="results">
+<Section title="Lessons Learnt" kind="context">
 
-<Placeholder>Empirical results. Real figures only.</Placeholder>
+### Bias–variance trade-off
 
-</Section>
+A model that is too simple underfits: it does not learn the pattern in the data. A model that is too complex overfits: it learns details of the training data that do not apply to new data. The default decision tree, with 7,354 leaf nodes, is an example of a complex model. Limits on model complexity and validation on data that the model has not seen help to balance these risks.
 
-<Section title="Visualisations" kind="results">
+### Hyperparameter optimisation
 
-<Placeholder>Charts and figures, each with a description.</Placeholder>
+Grid search can need much computation, because it trains a model for each combination of values and each fold. For example, the perceptron search tested more than 14,000 combinations. Other methods, such as Bayesian optimisation, use the results of earlier evaluations to select the next values. In some cases, these methods need fewer evaluations to find good values. They do not guarantee a better model.
 
-</Section>
+### Feature scaling
 
-<Section title="Discussion and Limitations" kind="results">
-
-<Placeholder>What the results do and do not show.</Placeholder>
+Features with different numeric scales can affect some machine learning algorithms. Scaling is important for methods such as logistic regression and perceptrons, when their optimisation or regularisation is sensitive to scale. The final perceptron used unscaled features, so its weights are difficult to compare. Scaling is not necessary for every model. Decision trees usually do not need feature scaling, because each split uses one feature at a time.
 
 </Section>
 
-<Section title="Lessons Learned" kind="context">
+<Section title="Enhancement – Random Forest" kind="implementation">
 
-<Placeholder>What you would keep and what you would do differently.</Placeholder>
+<Placeholder>This section will describe the random forest enhancement, its implementation and its evaluation when the work is complete.</Placeholder>
 
 </Section>

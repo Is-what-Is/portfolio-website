@@ -1,6 +1,7 @@
 import "katex/dist/katex.min.css";
 import { Link, useParams } from "react-router";
 import { Container } from "../components/layout/Container";
+import { ClassificationReport } from "../components/project/ClassificationReport";
 import { Figure } from "../components/project/Figure";
 import { Placeholder } from "../components/project/Placeholder";
 import { ProjectSection } from "../components/project/ProjectSection";
@@ -20,6 +21,17 @@ export function meta({ params }: { params: { slug?: string } }) {
   ];
 }
 
+// "2024-11" or "2024-11-05" -> "November 2024". UTC, so the prerendered
+// text does not depend on the build machine's time zone.
+function formatMonthYear(isoDate: string) {
+  const [year, month] = isoDate.split("-").map(Number);
+  return new Date(Date.UTC(year, (month || 1) - 1)).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 const actionLink =
   "label-caps inline-block border border-line px-5 py-3.5 no-underline hover:border-accent hover:text-accent";
 
@@ -29,6 +41,7 @@ const mdxComponents = {
   Placeholder,
   Figure,
   TableScroll,
+  ClassificationReport,
 };
 
 export default function ProjectPage() {
@@ -50,6 +63,11 @@ export default function ProjectPage() {
           <h1 className="max-w-[22ch] text-[clamp(2rem,5vw,3.75rem)] leading-none font-extrabold tracking-[-0.02em] break-words uppercase">
             {project.title}
           </h1>
+          {project.date && (
+            <p className="label-caps mt-5 text-ink-muted">
+              <time dateTime={project.date}>{formatMonthYear(project.date)}</time>
+            </p>
+          )}
           <p className="mt-8 max-w-prose text-lg text-ink-muted">
             {project.summary}
           </p>

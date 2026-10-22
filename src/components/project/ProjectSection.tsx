@@ -29,13 +29,17 @@ function toId(title: string) {
 export function ProjectSection({
   title,
   kind,
+  highlight,
   children,
 }: {
   title: string;
   kind: SectionKind;
+  /** Leading words of the title to show in the accent colour. */
+  highlight?: string;
   children: ReactNode;
 }) {
   const id = toId(title);
+  const highlighted = highlight && title.startsWith(highlight);
   return (
     <section
       aria-labelledby={id}
@@ -44,7 +48,14 @@ export function ProjectSection({
       <div>
         <p className="label-caps mb-2 text-accent">{KIND_LABELS[kind]}</p>
         <h2 id={id} className="text-2xl leading-tight font-bold tracking-tight">
-          {title}
+          {highlighted ? (
+            <>
+              <span className="text-accent">{highlight}</span>
+              {title.slice(highlight.length)}
+            </>
+          ) : (
+            title
+          )}
         </h2>
       </div>
       <div className="prose min-w-0">{children}</div>

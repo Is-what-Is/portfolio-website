@@ -5,7 +5,7 @@ export type Project = {
   category: string;
   /** Position in the portfolio timeline: higher is newer. */
   order: number;
-  /** ISO date, once known. */
+  /** ISO date or year-month ("2024-11"), once known. Shown below the page title. */
   date?: string;
   /** Path under /public, 16:10, e.g. "project-thumbnails/credit-classification.webp". */
   thumbnail?: string;
@@ -41,11 +41,15 @@ export const projects: Project[] = [
     title: "Credit Classification",
     category: "MSc Data Science / Module",
     order: 2,
+    date: "2024-11",
     thumbnail: "project-thumbnails/credit-classification.jpg",
     thumbnailAlt:
       "Credit classification with machine learning: panels for logistic regression, perceptron and decision tree.",
     youtubeVideoId: "BdGzb_iidic",
-    summary: PLACEHOLDER_SUMMARY,
+    repositoryUrl: "https://github.com/Is-what-Is/credit-classification/tree/main",
+    repositoryLabel: "View Source Code",
+    summary:
+      "The project compared three machine learning classification methods for credit rating prediction: logistic regression, a perceptron and a decision tree. Logistic regression had the highest reported accuracy. The perceptron was second and the decision tree was third. The next stage of the project adds a random forest model and a Python web application for credit score classification.",
   },
   {
     slug: "reinforcement-learning-supply-chain",
