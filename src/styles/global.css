@@ -104,6 +104,23 @@
     margin-top: 0;
   }
 
+  /* Sub-subheadings (e.g. Theory / Implementation / Results under a model). */
+  .prose h4 {
+    margin-top: 1.75rem;
+    color: var(--color-accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Separates major subsections inside one section. */
+  .prose hr {
+    margin-block: 3rem;
+    border: 0;
+    border-top: 1px solid var(--color-line);
+  }
+
   .prose :is(ul, ol) {
     padding-left: 1.25rem;
   }
@@ -116,7 +133,7 @@
     list-style: decimal;
   }
 
-  .prose :where(p, li) > a:not([class]) {
+  .prose :where(p, li, th, td) > a:not([class]) {
     color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: 0.2em;

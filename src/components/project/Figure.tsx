@@ -35,7 +35,9 @@ export function Figure({
           height={height}
           loading="lazy"
           decoding="async"
-          className="block h-auto w-full"
+          // Never wider than the file itself, so small diagrams stay sharp.
+          style={{ maxWidth: width }}
+          className="mx-auto block h-auto w-full"
         />
       </div>
       <figcaption className="mt-3 text-sm text-ink-muted [&>p]:inline">
