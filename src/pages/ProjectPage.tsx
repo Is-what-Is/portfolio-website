@@ -66,11 +66,21 @@ export default function ProjectPage() {
           {project.date && (
             <p className="label-caps mt-5 text-ink-muted">
               <time dateTime={project.date}>{formatMonthYear(project.date)}</time>
+              {project.dateEnd && (
+                <>
+                  {" – "}
+                  <time dateTime={project.dateEnd}>
+                    {formatMonthYear(project.dateEnd)}
+                  </time>
+                </>
+              )}
             </p>
           )}
-          <p className="mt-8 max-w-prose text-lg text-ink-muted">
-            {project.summary}
-          </p>
+          <div className="mt-8 max-w-prose space-y-4 text-lg text-ink-muted">
+            {project.summary.split("\n\n").map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
           {(project.repositoryUrl || project.applicationUrl) && (
             <ul className="mt-8 flex list-none flex-wrap gap-4">
               {project.applicationUrl && (
@@ -97,49 +107,53 @@ export default function ProjectPage() {
           <Placeholder>The write-up for this project has not been added yet.</Placeholder>
         )}
 
-        <ProjectSection title="Video Explanation" kind="context">
-          {project.youtubeVideoId ? (
-            <YouTubeEmbed
-              video={project.youtubeVideoId}
-              title={`Video explanation: ${project.title}`}
-            />
-          ) : (
-            <Placeholder>A video explanation will be embedded here.</Placeholder>
-          )}
-        </ProjectSection>
+        {!project.writeUpOnly && (
+          <>
+            <ProjectSection title="Video Explanation" kind="context">
+              {project.youtubeVideoId ? (
+                <YouTubeEmbed
+                  video={project.youtubeVideoId}
+                  title={`Video explanation: ${project.title}`}
+                />
+              ) : (
+                <Placeholder>A video explanation will be embedded here.</Placeholder>
+              )}
+            </ProjectSection>
 
-        <ProjectSection title="Interactive Application" kind="interactive">
-          {project.applicationUrl ? (
-            <>
-              <p>
-                This project has a working application, hosted separately from
-                this site.
-              </p>
-              <p>
-                <a href={project.applicationUrl} className={actionLink}>
-                  Open the Application
-                </a>
-              </p>
-            </>
-          ) : (
-            <Placeholder>
-              No application is linked yet. When one exists, its link appears
-              here.
-            </Placeholder>
-          )}
-        </ProjectSection>
+            <ProjectSection title="Interactive Application" kind="interactive">
+              {project.applicationUrl ? (
+                <>
+                  <p>
+                    This project has a working application, hosted separately from
+                    this site.
+                  </p>
+                  <p>
+                    <a href={project.applicationUrl} className={actionLink}>
+                      Open the Application
+                    </a>
+                  </p>
+                </>
+              ) : (
+                <Placeholder>
+                  No application is linked yet. When one exists, its link appears
+                  here.
+                </Placeholder>
+              )}
+            </ProjectSection>
 
-        <ProjectSection title="Source Code" kind="implementation">
-          {project.repositoryUrl ? (
-            <p>
-              <a href={project.repositoryUrl} className={actionLink}>
-                {project.repositoryLabel ?? "Source Repository"}
-              </a>
-            </p>
-          ) : (
-            <Placeholder>The repository link has not been added yet.</Placeholder>
-          )}
-        </ProjectSection>
+            <ProjectSection title="Source Code" kind="implementation">
+              {project.repositoryUrl ? (
+                <p>
+                  <a href={project.repositoryUrl} className={actionLink}>
+                    {project.repositoryLabel ?? "Source Repository"}
+                  </a>
+                </p>
+              ) : (
+                <Placeholder>The repository link has not been added yet.</Placeholder>
+              )}
+            </ProjectSection>
+          </>
+        )}
 
         <ProjectSection title="Related Projects" kind="context">
           <RelatedProjects projects={related} />

@@ -7,11 +7,14 @@ export type Project = {
   order: number;
   /** ISO date or year-month ("2024-11"), once known. Shown below the page title. */
   date?: string;
+  /** End of the project, same format as `date`. Shown as "date – dateEnd". */
+  dateEnd?: string;
   /** Path under /public, 16:10, e.g. "project-thumbnails/credit-classification.webp". */
   thumbnail?: string;
   thumbnailAlt?: string;
   /** "contain" shows the whole image (for diagrams); the default "cover" fills the frame. */
   thumbnailFit?: "cover" | "contain";
+  /** Separate paragraphs with a blank line ("\n\n"). */
   summary: string;
   repositoryUrl?: string;
   /** Link text for the repository in the Source Code section. */
@@ -19,9 +22,12 @@ export type Project = {
   youtubeVideoId?: string;
   /** Link to the separately hosted web application, when one exists. */
   applicationUrl?: string;
+  /**
+   * The write-up holds all of the page content: the standard Video,
+   * Interactive Application and Source Code sections are left out.
+   */
+  writeUpOnly?: boolean;
 };
-
-const PLACEHOLDER_SUMMARY = "[Placeholder summary] To be supplied.";
 
 // To add a project, append a record with the next `order` value.
 // The grid, routes and prerendered pages all follow from this list.
@@ -31,10 +37,15 @@ export const projects: Project[] = [
     title: "My First Project: Data Science Module",
     category: "BSc Economics and Finance",
     order: 1,
+    date: "2022-11",
+    dateEnd: "2023-01",
     thumbnail: "project-thumbnails/bsc-data-science.jpg",
     thumbnailAlt:
       "Data Science Homepage title card over a background of falling green code.",
-    summary: PLACEHOLDER_SUMMARY,
+    writeUpOnly: true,
+    summary:
+      "As part of my BSc Economics and Finance at the University of Bristol, I chose to take a Data Science module where I developed a portfolio and a topical project showcasing visualisations through a website.\n\n" +
+      "At the time, the UK Conservative Party was facing the end of its time in government, having been in power for 12 years. I chose to investigate and attempt to audit and measure the party's impact on the country over that period.",
   },
   {
     slug: "credit-classification",
