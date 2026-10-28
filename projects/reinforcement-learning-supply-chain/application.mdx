@@ -1,0 +1,140 @@
+{/*
+  Interactive Application section: the Supply Chain Optimisation App.
+  Rendered inside the standard "Interactive Application" section on the
+  project page, above the link to the hosted app (applicationUrl).
+  Same style rules as index.mdx. Keep the blank lines around Markdown inside JSX.
+*/}
+
+### Supply Chain Optimisation App
+
+This app simulates one manufacturer under normal conditions. It finds the safety stock, capacity and feedback setting that give the lowest total cost. The fill rate must meet a target.
+
+The app shows four effects:
+
+- The trade-off between inventory variance and order variance.
+- Safety stock as a buffer against demand and lead-time uncertainty.
+- Capacity as a buffer against order variability.
+- The effect of the order cadence on production stability.
+
+### Dynamics
+
+Demand and lead times are random. Each day, the simulation does these steps in this sequence:
+
+1. The manufacturer receives orders that arrive on that day.
+2. Demand occurs.
+3. The manufacturer supplies today's demand first, then any backlog.
+4. On a review day, the manufacturer places a new order.
+
+Orders can arrive out of sequence. The production of each order is spread evenly over one review period.
+
+### Order policy
+
+The manufacturer uses the Proportional Order Up-To (POUT) policy:
+
+$$
+\text{Order} = c\,\mu_d + \frac{ss - NS}{T} + \frac{\mu_L\,\mu_d - WIP}{T}
+$$
+
+- $c\,\mu_d$ is the mean demand for one review period.
+- $NS$ is net stock (inventory minus backlog).
+- $WIP$ is the sum of orders placed but not received.
+- $T$ is the proportional feedback controller.
+
+$T$ controls how fast the manufacturer corrects errors:
+
+- A small $T$ keeps inventory stable but makes orders unstable.
+- A large $T$ keeps orders stable but makes inventory unstable.
+- $T = 1$ gives the standard Order Up-To policy.
+- $T \le 0.5$ makes the system unstable.
+
+Theory gives $\text{Bullwhip} = 1 / (2T - 1)$. The simulation agrees with this result.
+
+### Cost model
+
+<TableScroll label="Table 3" caption="Daily cost components.">
+<table>
+<thead>
+<tr><th scope="col">Cost</th><th scope="col">Equation</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Holding</th><td>$h \times \text{inventory}$</td></tr>
+<tr><th scope="row">Backlog</th><td>$b \times \text{backlog}$</td></tr>
+<tr><th scope="row">Capacity</th><td>$u \times k$</td></tr>
+<tr><th scope="row">Overtime</th><td>$w \times \max(0,\ \text{production} - k)$</td></tr>
+</tbody>
+</table>
+</TableScroll>
+
+### Optimal safety stock
+
+The cost-only optimum is the $b / (b + h)$ quantile of the net stock shortfall. If this value does not meet the fill-rate target, the app increases the safety stock until the target is met.
+
+The app also shows King's formula as a reference:
+
+$$
+ss = z \sqrt{(L + R)\,\sigma_d^2 + (\sigma_L\,\mu_d)^2}, \qquad z = \Phi^{-1}(\text{target})
+$$
+
+King's formula uses the cycle service level, which is the probability of no stockout in a cycle. The app uses the fill rate, which is the fraction of demand supplied from stock. Thus, King's formula usually gives a higher value.
+
+With a monthly cadence, the optimal safety stock can be negative. Cycle stock supplies most of the demand, so a small planned shortage at the end of each cycle costs less than extra stock.
+
+### Optimal capacity
+
+One more unit of capacity costs $u$ each day. It saves $w$ on each day with overtime. Thus, the optimal capacity is the $1 - u/w$ quantile of daily production:
+
+$$
+k = \mu_d + z\,\sigma_P, \qquad z = \Phi^{-1}(1 - u/w)
+$$
+
+- If $w < 2u$, the optimal capacity is less than the mean production.
+- If $w > 2u$, the optimal capacity is more than the mean production.
+
+### Inputs
+
+<TableScroll label="Table 4" caption="App inputs and their ranges.">
+<table>
+<thead>
+<tr><th scope="col">Input</th><th scope="col">Range</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Mean daily demand ($\mu_d$)</th><td>10–100</td></tr>
+<tr><th scope="row">Demand standard deviation ($\sigma_d$)</th><td>0.1–0.5 × $\mu_d$</td></tr>
+<tr><th scope="row">Mean lead time ($\mu_L$)</th><td>5–25 days</td></tr>
+<tr><th scope="row">Lead time standard deviation ($\sigma_L$)</th><td>0.2–0.4 × $\mu_L$</td></tr>
+<tr><th scope="row">Target fill rate</th><td>0.75–0.99</td></tr>
+<tr><th scope="row">Holding cost ($h$), backlog cost ($b$)</th><td>1–10</td></tr>
+<tr><th scope="row">Capacity cost ($u$), overtime cost ($w$)</th><td>1–10, with $u < w$</td></tr>
+</tbody>
+</table>
+</TableScroll>
+
+### Cadence
+
+The cadence sets how often the manufacturer orders: daily ($c = 1$), weekly ($c = 7$) or monthly ($c = 30$). A longer cadence makes daily production more stable, so the manufacturer needs less spare capacity. But a longer cadence also increases cycle stock, which increases holding cost.
+
+### Optimisation method
+
+The optimiser finds the safety stock ($ss$), capacity ($k$) and $T$ with the lowest expected cost over 365 days:
+
+1. For each $T$ from 0.1 to 10, it simulates 30 replications.
+2. For each $T$, it calculates the optimal capacity and safety stock directly from the results.
+3. It selects the best $T$ in the range 1 to 10.
+4. It refines that $T$ with a bounded scalar search.
+
+Orders do not depend on safety stock. Thus, one simulation for each $T$ is sufficient. All parameter sets use the same random numbers, so the comparison is fair. One optimisation takes approximately one second.
+
+### How to use the app
+
+1. Set the inputs.
+2. Select the cadence.
+3. Push **Optimise**. The app puts the optimal values into the parameter boxes and shows the cost and fill rate.
+4. Examine the charts of Bullwhip, inventory variance and cost against $T$.
+5. To test different values, push **Edit** and change the parameters.
+6. Push **Run** to simulate one year with the current parameters.
+7. Compare the cost with the optimum.
+8. Download the results as a CSV file.
+
+### Tools
+
+[Python](https://docs.python.org/3/), [NumPy](https://numpy.org/), [pandas](https://pandas.pydata.org/), [SciPy](https://scipy.org/), [Plotly](https://plotly.com/python/), [Streamlit](https://streamlit.io/) and [pytest](https://docs.pytest.org/).

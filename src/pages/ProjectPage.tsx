@@ -10,7 +10,7 @@ import { TableScroll } from "../components/project/TableScroll";
 import { YouTubeEmbed } from "../components/project/YouTubeEmbed";
 import { getProject, getProjectsNewestFirst } from "../data/projects";
 import { site } from "../data/site";
-import { getProjectContent } from "../lib/projectContent";
+import { getApplicationContent, getProjectContent } from "../lib/projectContent";
 import NotFoundPage from "./NotFoundPage";
 
 export function meta({ params }: { params: { slug?: string } }) {
@@ -51,6 +51,7 @@ export default function ProjectPage() {
   if (!project) return <NotFoundPage />;
 
   const Content = getProjectContent(project.slug);
+  const ApplicationContent = getApplicationContent(project.slug);
   const related = getProjectsNewestFirst().filter(
     (other) => other.slug !== project.slug,
   );
@@ -123,10 +124,14 @@ export default function ProjectPage() {
             <ProjectSection title="Interactive Application" kind="interactive">
               {project.applicationUrl ? (
                 <>
-                  <p>
-                    This project has a working application, hosted separately from
-                    this site.
-                  </p>
+                  {ApplicationContent ? (
+                    <ApplicationContent components={mdxComponents} />
+                  ) : (
+                    <p>
+                      This project has a working application, hosted separately
+                      from this site.
+                    </p>
+                  )}
                   <p>
                     <a href={project.applicationUrl} className={actionLink}>
                       Open the Application
