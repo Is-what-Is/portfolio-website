@@ -73,6 +73,7 @@ export const projects: Project[] = [
     thumbnailFit: "contain",
     youtubeVideoId: "3rEmRgLgxs0",
     repositoryUrl: "https://github.com/Is-what-Is/RL-in-SupplyChains",
+    applicationUrl: "https://supply-chain-simulation.streamlit.app",
     repositoryLabel: "View the Research Code and Documentation",
     summary:
       "MSc dissertation investigating whether a Deep Q-Network agent can learn to adapt supplier allocation, delivery routing and safety stock decisions in a simulated supply chain exposed to disruptions.",
