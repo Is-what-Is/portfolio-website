@@ -67,6 +67,8 @@ export const projects: Project[] = [
     title: "Reinforcement Learning in Supply Chain Management",
     category: "MSc Data Science / Dissertation",
     order: 3,
+    date: "2026-06",
+    dateEnd: "2026-10",
     thumbnail: "project-thumbnails/reinforcement-learning-supply-chain.png",
     thumbnailAlt:
       "Supply chain model diagram: two suppliers, two delivery routes and a warehouse, with the demand, order and inventory equations.",
