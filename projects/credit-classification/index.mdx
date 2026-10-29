@@ -22,6 +22,8 @@ import perceptronConfusion from "./figures/perceptron-final.png";
 import treeDiagram from "./figures/decision-tree-diagram.png";
 import defaultTree from "./figures/default-tree.png";
 import finalTree from "./figures/final-tree.png";
+import randomForestDiagram from "./figures/random-forest-algorithm.png";
+import randomForestConfusion from "./figures/random-forest-confusion-matrix.png";
 
 <Section title="Background and Motivation" kind="context">
 
@@ -514,6 +516,77 @@ Features with different numeric scales can affect some machine learning algorith
 
 <Section title="Enhancement – Random Forest" kind="implementation">
 
-<Placeholder>This section will describe the random forest enhancement, its implementation and its evaluation when the work is complete.</Placeholder>
+<Figure src={randomForestDiagram} width={800} height={400} label="Figure 13" alt="Diagram of a random forest. One training data instance goes to several decision trees. Each tree predicts a class: Class A, Class A and Class B. Bagging (voting majority) combines the predictions, and the prediction output is Class A.">
+A random forest. Each tree makes a prediction, and the majority vote gives the output.
+</Figure>
+
+### What a random forest is
+
+A random forest is a group of many decision trees. Each tree makes a prediction, and the forest uses the class that most trees predict. This model uses 300 trees.
+
+### How it works
+
+1. The model makes a random sample of the training data for each tree. Some rows can occur more than once in a sample. This is called "bootstrap sampling".
+2. At each split, a tree looks at only a random subset of the features.
+3. Each tree grows on its own sample and makes its own prediction.
+4. The forest counts the predictions and gives the majority class.
+
+### Why it is better than a single decision tree
+
+A single decision tree learns the training data in close detail. A small change in the data can give a very different tree. The tree has high variance.
+
+In a random forest, each tree sees different data and different features, so the trees make different errors. When the forest combines the trees, many of these errors cancel. This reduces variance, and the bias does not increase much.
+
+The model also uses `class_weight='balanced_subsample'`. This gives more weight to the smaller classes in each tree's sample, because the classes are not balanced (Standard 53%, Poor 29%, Good 18%).
+
+### Data processing and data leakage
+
+The dataset has eight monthly records for each customer. In the earlier work, a random train-test split put records from the same customer into both sets. The model then saw part of the test data during training, which is data leakage, and the test score was too high.
+
+In this version, the data processing is better. I kept `Customer_ID` and used `StratifiedGroupKFold` to split the data. All records for one customer are in the train set or the test set, never both. The split also keeps the class proportions the same in the two sets (80% train, 20% test).
+
+### Results
+
+<Figure src={randomForestConfusion} width={557} height={432} label="Figure 14" narrow alt="Normalised confusion matrix of the random forest. Rows are the true labels and columns are the predicted labels, in the sequence Poor, Standard, Good. True Poor: 0.62 Poor, 0.34 Standard, 0.041 Good. True Standard: 0.12 Poor, 0.79 Standard, 0.088 Good. True Good: 0.013 Poor, 0.53 Standard, 0.46 Good.">
+Confusion matrix of the random forest on the test set. Each row shows the proportions of one true class.
+</Figure>
+
+<ClassificationReport
+  label="Table 8"
+  caption="Classification report for the random forest on 20,000 test records."
+  classes={[
+    ["Good", 0.58, 0.46, 0.51, 3498],
+    ["Poor", 0.73, 0.62, 0.67, 5821],
+    ["Standard", 0.69, 0.79, 0.74, 10681],
+  ]}
+  accuracy={[0.68, 20000]}
+  macro={[0.66, 0.62, 0.64, 20000]}
+  weighted={[0.68, 0.68, 0.68, 20000]}
+/>
+
+<TableScroll label="Table 9" caption="The random forest compared with the single decision tree.">
+<table>
+<thead>
+<tr><th scope="col">Model</th><th scope="col" className="num">Accuracy</th><th scope="col" className="num">Macro F1-score</th></tr>
+</thead>
+<tbody>
+<tr><th scope="row">Single decision tree</th><td className="num">0.70</td><td className="num">0.67</td></tr>
+<tr><th scope="row">Random forest</th><td className="num">0.68</td><td className="num">0.64</td></tr>
+<tr><th scope="row">Random forest (train set)</th><td className="num">n/a</td><td className="num">1.00</td></tr>
+</tbody>
+</table>
+</TableScroll>
+
+### Interpretation
+
+The random forest did not do better than the single decision tree. The accuracy and macro F1 are almost the same.
+
+The model is best at the Standard class and worst at the Good class. The recall for Good is 0.46, so the model misses more than half of the customers with a good credit score.
+
+The train macro F1 is 1.00 and the test macro F1 is 0.64. This shows that the trees memorised the training data.
+
+I think the main cause is the dataset. The data is synthetic and has many errors, for example negative ages and values that are not numbers. The features do not give a strong signal for the credit score. More trees cannot find a pattern that the data does not contain.
+
+Also, the decision tree score came from a random split, which possibly had data leakage. The random forest score comes from a grouped split with no leakage. Thus the two results are close, but the random forest result is more honest.
 
 </Section>
