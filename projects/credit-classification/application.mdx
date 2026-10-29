@@ -1,0 +1,73 @@
+{/*
+  Interactive Application section: the Credit Rating Predictor App.
+  Rendered inside the standard "Interactive Application" section on the
+  project page, above the link to the hosted app (applicationUrl).
+  Same style rules as index.mdx. Keep the blank lines around Markdown inside JSX.
+*/}
+
+import appCoefficients from "./figures/app-logistic-regression-coefficients.png";
+
+### Credit Rating Predictor App
+
+### What the app does
+
+The Credit Rating Predictor is a web app that I made with Streamlit. A user enters ten financial details, and the app predicts if the user's credit rating is Good or Poor. The app also shows a confidence value for the prediction.
+
+### Model selection
+
+Logistic regression gave the best results of all the classifiers that I tested, so the app uses it. I trained a new logistic regression model for the app.
+
+The original dataset uses many features that a typical person does not know, for example the credit mix or the number of credit inquiries. For the app, I kept only ten features that a user can easily find:
+
+- Age
+- Monthly in-hand salary
+- Number of bank accounts
+- Number of credit cards
+- Interest rate
+- Number of loans
+- Outstanding debt
+- Credit history age
+- Amount invested monthly
+- Monthly balance
+
+These ten features are the input fields in the app. I removed the Standard class, so the model has only two classes: Good and Poor.
+
+### Training
+
+I used the same data processing as in the random forest work. The split uses `Customer_ID`, so all records for one customer are in the train set or the test set, never both. This prevents data leakage.
+
+The model is a pipeline with a `StandardScaler` and a `LogisticRegression`. A grid search with grouped cross-validation found the best settings: L2 penalty, $C = 0.001$, and balanced class weights. I saved the pipeline as `model.pkl`, and the app loads this file.
+
+### Results
+
+<ClassificationReport
+  label="Table 10"
+  caption="Classification report for the app model on 9,429 test records."
+  classes={[
+    ["Poor", 0.95, 0.79, 0.86, 5850],
+    ["Good", 0.73, 0.93, 0.82, 3579],
+  ]}
+  accuracy={[0.84, 9429]}
+  macro={[0.84, 0.86, 0.84, 9429]}
+/>
+
+The ROC AUC is 0.91.
+
+<Figure src={appCoefficients} width={710} height={433} label="Figure 15" alt="Horizontal bar chart of the logistic regression coefficients. A positive value means a Good rating is more likely. Positive: Credit_History_Age (about 0.23), Age (about 0.11) and Monthly_Inhand_Salary (about 0.11). Near zero: Amount_invested_monthly and Monthly_Balance. Negative: Num_Bank_Accounts (about −0.24), Num_of_Loan (about −0.25), Outstanding_Debt (about −0.49), Num_Credit_Card (about −0.60) and Interest_Rate (about −0.75).">
+Coefficients of the app model. A positive coefficient makes a Good rating more likely. The features are standardised, so the sizes can be compared.
+</Figure>
+
+### Decision threshold
+
+The model gives the probability that the credit rating is Good. If this probability is 50% or more, the app shows Good. If it is less than 50%, the app shows Poor.
+
+You can move this threshold. A higher threshold makes the model more careful before it predicts Good. I kept the threshold at 50% because it gives a high recall for the Good class (0.93). The model finds almost all users who have a good credit rating.
+
+### Confidence
+
+The confidence value is the probability that the model gives for the predicted class:
+
+- If the prediction is Good, the confidence is the predicted probability.
+- If the prediction is Poor, the confidence is 1 minus the predicted probability.
+
+The confidence is an estimate, not a guarantee. If the input values are far outside the values in the training data, the estimate is less reliable.

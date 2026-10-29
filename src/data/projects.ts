@@ -58,6 +58,7 @@ export const projects: Project[] = [
       "Credit classification with machine learning: panels for logistic regression, perceptron and decision tree.",
     youtubeVideoId: "BdGzb_iidic",
     repositoryUrl: "https://github.com/Is-what-Is/credit-classification/tree/main",
+    applicationUrl: "https://is-what-is-credit-classification.streamlit.app",
     repositoryLabel: "View Source Code",
     summary:
       "The project compared three machine learning classification methods for credit rating prediction: logistic regression, a perceptron and a decision tree. Logistic regression had the highest reported accuracy. The perceptron was second and the decision tree was third. The next stage of the project adds a random forest model and a Python web application for credit score classification.",

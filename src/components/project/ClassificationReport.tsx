@@ -23,7 +23,8 @@ export function ClassificationReport({
   /** [accuracy, support] */
   accuracy: [number, number];
   macro: Scores;
-  weighted: Scores;
+  /** Omitted when the source report has no weighted average. */
+  weighted?: Scores;
 }) {
   const score = (value: number) => value.toFixed(2);
   const count = (value: number) => value.toLocaleString("en-GB");
@@ -65,7 +66,7 @@ export function ClassificationReport({
             <td className="num">{count(accuracy[1])}</td>
           </tr>
           {row("Macro average", macro)}
-          {row("Weighted average", weighted)}
+          {weighted && row("Weighted average", weighted)}
         </tbody>
       </table>
     </TableScroll>
