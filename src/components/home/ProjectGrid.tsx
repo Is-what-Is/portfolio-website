@@ -3,8 +3,8 @@ import { Container } from "../layout/Container";
 import { ProjectCard } from "./ProjectCard";
 
 /**
- * Expects projects sorted newest first. The grid runs right to left, so the
- * newest project lands top-right and older ones flow left, then down.
+ * Expects projects sorted newest first. The grid runs left to right, so the
+ * newest project lands top-left and older ones flow right, then down.
  * Keyboard and screen-reader order follow the same newest-to-oldest sequence.
  */
 export function ProjectGrid({ projects }: { projects: Project[] }) {
@@ -20,12 +20,9 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
         {projects.length === 0 ? (
           <p className="text-ink-muted">Projects will appear here.</p>
         ) : (
-          <ul
-            dir="rtl"
-            className="grid list-none grid-cols-1 gap-9 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <ul className="grid list-none grid-cols-1 gap-9 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <li key={project.slug} dir="ltr">
+              <li key={project.slug}>
                 <ProjectCard project={project} />
               </li>
             ))}

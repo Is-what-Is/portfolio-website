@@ -132,15 +132,15 @@ New projects are inserted at the top of the portfolio.
 
 The desired desktop visual ordering is:
 
-older ... | older | newest
-older ... | older | ...
+newest | older | older ...
+older  | older | ...
 ...
 
-Therefore, the newest project occupies the top-right position, with older projects moving left and then down as additional projects are added.
+Therefore, the newest project occupies the top-left position, with older projects moving right and then down as additional projects are added.
 
 Do not hard-code individual card positions. Model project ordering as data so that adding a new project automatically changes the layout.
 
-The exact CSS grid direction should be tested visually to ensure the newest item lands top-right.
+The exact CSS grid direction should be tested visually to ensure the newest item lands top-left.
 
 ## 6. Initial projects
 

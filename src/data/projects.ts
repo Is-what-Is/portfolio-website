@@ -81,6 +81,20 @@ export const projects: Project[] = [
     summary:
       "MSc dissertation investigating whether a Deep Q-Network agent can learn to adapt supplier allocation, delivery routing and safety stock decisions in a simulated supply chain exposed to disruptions.",
   },
+  {
+    slug: "modern-portfolio-management",
+    title: "Modern Portfolio Management",
+    category: "Finance",
+    order: 4,
+    date: "2026-10",
+    thumbnail: "project-thumbnails/portfolio_management_thumbnail.png",
+    thumbnailAlt:
+      "Risk and expected return chart: a Capital Market Line runs from the risk-free rate to the tangency portfolio on the efficient frontier, above a set of other risky portfolios.",
+    // The application and repository links are in the write-up, so that they open in a new tab.
+    writeUpOnly: true,
+    summary:
+      "This project explains Modern Portfolio Theory and derives the Capital Asset Pricing Model (CAPM). A web application applies these concepts to portfolio construction.",
+  },
 ];
 
 export function getProjectsNewestFirst(): Project[] {
