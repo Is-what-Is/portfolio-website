@@ -1,0 +1,453 @@
+{/*
+  Project write-up: Modern Portfolio Management.
+  Source of truth for the application claims: portfolio-model.py and
+  portfolio-app.py in the modern-portfolio-management repository.
+  The date and summary live in src/data/projects.ts.
+  This project sets writeUpOnly, so these sections are the whole page body.
+  Style: ASD-STE100 Simplified Technical English as a writing standard.
+  Keep the blank lines around Markdown inside JSX.
+  Maths: $inline$ and $$display$$ are rendered by KaTeX at build time.
+*/}
+
+<Section title="Summary" kind="context">
+
+Harry Markowitz developed Modern Portfolio Theory (MPT) in the 1950s. He published his foundational paper on portfolio selection in 1952. He developed the theory further during the 1950s.
+
+MPT studies the relationship between investment return and risk. Return measures the gain or loss from an investment. Variance and standard deviation measure the variability of returns. Investors normally expect a higher return when they accept higher risk.
+
+Portfolio management selects asset weights that give an efficient balance between expected return and risk. Diversification can decrease asset-specific risk. Portfolio optimisation identifies the portfolios that give the best expected return for a defined level of risk.
+
+**Portfolio management aims to maximise expected return for a given level of risk, or minimise risk for a given expected return.**
+
+An optimal portfolio does not guarantee a high return. It does not prevent losses.
+
+</Section>
+
+<Section title="Data" kind="implementation">
+
+The application retrieves market data from Yahoo Finance through the `yfinance` Python API. The application retrieves the data when it needs the data. The application can keep retrieved data for up to one hour, so this is not a real-time data feed.
+
+The data gives the daily historical prices of each asset. These prices are inputs to the portfolio model. The model uses them to calculate asset returns and portfolio statistics.
+
+The application uses the data that is available from Yahoo Finance. Prices can contain errors or gaps. The application does not verify the accuracy or completeness of the data.
+
+</Section>
+
+<Section title="Theory" kind="theory">
+
+### Return
+
+The return of an asset measures the percentage change in its price between two observations.
+
+Let $P_i$ be the price at observation $i$. Let $P_{i-1}$ be the price at the previous observation. The simple return $r_i$ is:
+
+$$
+r_i = \frac{P_i-P_{i-1}}{P_{i-1}}
+$$
+
+Multiply $r_i$ by 100 to show it as a percentage.
+
+The application uses adjusted prices. Adjusted prices include the effect of dividends and stock splits. The application also uses the log return, not the simple return:
+
+$$
+r_i = \ln\left(\frac{P_i}{P_{i-1}}\right)
+$$
+
+The two values are almost equal for small price changes. The two values have a larger difference for large price changes.
+
+### Risk
+
+In this section, $i$ identifies an observation and $N$ is the number of observations. Later sections give these symbols a different meaning, and state that meaning.
+
+The mean return $\bar r$ is:
+
+$$
+\bar r
+=
+\frac{1}{N}
+\sum_{i=1}^{N}r_i
+$$
+
+Risk is the variability of returns. Variance measures how far returns vary from their mean. The application calculates the sample variance from historical returns:
+
+$$
+\operatorname{Var}(r)
+=
+\frac{1}{N-1}
+\sum_{i=1}^{N}(r_i-\bar r)^2
+$$
+
+The divisor is $N-1$ because the returns are a sample from a longer history. The population variance uses the divisor $N$. All variances and covariances on this page use the sample convention when they are calculated from data.
+
+Standard deviation $\sigma_r$ is the square root of variance:
+
+$$
+\sigma_r=\sqrt{\operatorname{Var}(r)}
+$$
+
+Standard deviation expresses variability in the same units as returns.
+
+Variance and standard deviation are common measures of financial risk. They do not measure every type of investment risk.
+
+### A portfolio with two assets
+
+Consider a portfolio with two assets. Let $r_1$ and $r_2$ be the returns of asset 1 and asset 2. Let $w_1$ and $w_2$ be the portfolio weights of asset 1 and asset 2. A weight is the fraction of the portfolio that the investor puts in an asset.
+
+For a fully invested portfolio without leverage, the weights add to 1. Each weight is between 0 and 1:
+
+$$
+w_1+w_2=1
+$$
+
+The portfolio return $r_p$ is:
+
+$$
+r_p=w_1r_1+w_2r_2
+$$
+
+#### Expected return
+
+The expected return $\mathbb{E}[r]$ is the mean of the distribution of possible returns. The true value is not known. The application uses the mean historical return as an estimate.
+
+Start with the expected value of the portfolio return:
+
+$$
+\mathbb{E}[r_p]
+=
+\mathbb{E}[w_1r_1+w_2r_2]
+$$
+
+Expectation is linear. Therefore:
+
+$$
+\boxed{
+\mathbb{E}[r_p]
+=
+w_1\mathbb{E}[r_1]
++
+w_2\mathbb{E}[r_2]
+}
+$$
+
+The expected portfolio return is the weighted sum of the expected asset returns.
+
+#### Portfolio variance
+
+Start with the variance of the portfolio return:
+
+$$
+\operatorname{Var}(r_p)
+=
+\operatorname{Var}(w_1r_1+w_2r_2)
+$$
+
+Expand the expression:
+
+$$
+\boxed{
+\begin{aligned}
+\operatorname{Var}(r_p)
+={}&w_1^2\operatorname{Var}(r_1)\\
+&+w_2^2\operatorname{Var}(r_2)\\
+&+2w_1w_2\operatorname{Cov}(r_1,r_2)
+\end{aligned}
+}
+$$
+
+The covariance $\operatorname{Cov}(r_1,r_2)$ measures how the two returns move together. It is positive when the two returns tend to be on the same side of their means. It is negative when they tend to be on opposite sides.
+
+Each term has one function:
+
+- The first term measures the weighted variance of asset 1.
+- The second term measures the weighted variance of asset 2.
+- The third term measures how the two asset returns move together.
+
+The covariance term is important. It can increase or decrease the portfolio variance. Two assets do not need to move in the same direction at the same time. Their relationship affects the risk of the combined portfolio.
+
+If both weights are positive and the two returns do not move in exact proportion, the portfolio standard deviation is less than the weighted sum of the two standard deviations. This is the mathematical basis of diversification.
+
+### A portfolio with N assets
+
+The two-asset model extends to a portfolio with many assets:
+
+$$
+\begin{aligned}
+&\text{Asset 1}\\
+&\text{Asset 2}\\
+&\vdots\\
+&\text{Asset }N
+\end{aligned}
+$$
+
+From this section on, $N$ is the number of assets. The symbols $i$ and $j$ identify assets. Let $w_i$ be the weight of asset $i$. Let $r_i$ be the return of asset $i$.
+
+For a fully invested portfolio, the weights add to 1:
+
+$$
+\sum_{i=1}^{N}w_i=1
+$$
+
+#### Expected return
+
+$$
+\boxed{
+\mathbb{E}[r_p]
+=
+\sum_{i=1}^{N}w_i\mathbb{E}[r_i]
+}
+$$
+
+Each asset contributes to the expected portfolio return according to its weight.
+
+#### Portfolio variance
+
+$$
+\boxed{
+\operatorname{Var}(r_p)
+=
+\sum_{i=1}^{N}\sum_{j=1}^{N}
+w_iw_j\operatorname{Cov}(r_i,r_j)
+}
+$$
+
+The double sum includes every pair of assets. When $i=j$, the covariance is the variance of asset $i$. Therefore, portfolio variance depends on the individual asset variances and on the covariances between assets.
+
+Portfolio risk does not depend only on the risk of each individual asset. It also depends on how the assets move in relation to one another.
+
+### The Sharpe ratio
+
+The Sharpe ratio $S_p$ of a portfolio is:
+
+$$
+\boxed{
+S_p=
+\frac{\mathbb{E}[r_p]-r_f}{\sigma_p}
+}
+$$
+
+In this equation:
+
+- $\mathbb{E}[r_p]$ is the expected portfolio return.
+- $r_f$ is the risk-free return for the same period.
+- $\sigma_p$ is the portfolio return standard deviation for that period.
+
+The Sharpe ratio measures expected excess return per unit of return standard deviation. Excess return is the return above the risk-free return. A higher Sharpe ratio shows a higher expected excess return per unit of measured risk.
+
+The return and the risk must use the same period. The application uses annual values for both.
+
+### Portfolio optimisation and the efficient frontier
+
+Portfolio optimisation compares portfolios that have different weights:
+
+1. Change the portfolio weights. Each valid set of weights gives one portfolio.
+2. Calculate the expected return and the standard deviation of each portfolio.
+3. Plot each portfolio, with standard deviation on the horizontal axis and expected return on the vertical axis.
+4. Find the portfolios that give the highest expected return at each level of standard deviation.
+
+The plot shows the set of possible risk-return combinations.
+
+**The efficient frontier contains portfolios that offer the highest expected return for a given level of risk, or the lowest risk for a given expected return.**
+
+A portfolio below the efficient frontier is inefficient. Another portfolio can give a higher expected return for the same risk.
+
+Now add a risk-free asset. This asset has the return $r_f$ and a standard deviation of zero. A line from $r_f$ to a portfolio on the plot has a gradient equal to the Sharpe ratio of that portfolio. The line with the largest gradient touches the efficient frontier at one point.
+
+Under the standard mean-variance assumptions, this point identifies the tangency portfolio. The line from $r_f$ through the tangency portfolio is the Capital Market Line (CML). Its gradient is:
+
+$$
+\text{CML gradient}
+=
+\frac{\mathbb{E}[r_T]-r_f}{\sigma_T}
+$$
+
+The subscript $T$ identifies the tangency portfolio. This gradient is equal to the Sharpe ratio of the tangency portfolio. Under the standard assumptions, this is the maximum Sharpe ratio that the feasible risky portfolios can give.
+
+Three terms have different meanings:
+
+- **Efficient frontier:** A curve of portfolios that contain only risky assets.
+- **Capital Market Line:** A line that shows the relationship between expected return and total risk for efficient portfolios. These portfolios combine the risk-free asset and the tangency portfolio.
+- **Security Market Line (SML):** A line that shows the relationship between expected return and systematic risk. Beta measures this risk. The CAPM section defines beta.
+
+### From diversification to market risk
+
+Portfolio risk has two types:
+
+1. **Asset-specific risk:** Risk that is related to an individual company or asset.
+2. **Systematic risk:** Risk from factors that affect many assets, for example changes in interest rates or in broad economic conditions.
+
+Diversification decreases the effect of asset-specific risk. It does not remove risk that affects the assets together. The equations that follow show this result.
+
+Start with the general portfolio variance:
+
+$$
+\operatorname{Var}(r_p)
+=
+\sum_{i=1}^{N}\sum_{j=1}^{N}
+w_iw_j\operatorname{Cov}(r_i,r_j)
+$$
+
+Consider an equally weighted portfolio:
+
+$$
+w_i=\frac{1}{N}
+$$
+
+Substitute the equal weights:
+
+$$
+\operatorname{Var}(r_p)
+=
+\frac{1}{N^2}
+\sum_{i=1}^{N}\sum_{j=1}^{N}
+\operatorname{Cov}(r_i,r_j)
+$$
+
+The double sum has $N$ variances and $N(N-1)$ covariances between different assets. Let $\overline{V}_N$ be the average of the variances. Let $\overline{C}_N$ be the average of the covariances between different assets. Then:
+
+$$
+\operatorname{Var}(r_p)
+=
+\frac{1}{N}\,\overline{V}_N
++
+\frac{N-1}{N}\,\overline{C}_N
+$$
+
+When $N$ increases, the first term tends to decrease. The second term can remain significant.
+
+This result needs two assumptions about the covariance structure. First, $\overline{V}_N$ stays below a fixed value as $N$ increases. Second, $\overline{C}_N$ approaches a limit as $N$ increases. Under these assumptions, the portfolio variance approaches the limit of the average covariance:
+
+$$
+\lim_{N\to\infty}\operatorname{Var}(r_p)
+=
+\text{limiting average covariance}
+$$
+
+This result is a theoretical limit for equally weighted portfolios. The value of the limit depends on the assets. It is not one universal value of market risk for every possible portfolio.
+
+In the standard CAPM framework, investors can diversify away asset-specific risk. They cannot remove systematic market risk if they hold more assets. A broad market portfolio therefore gives the theoretical basis for the market-risk component in CAPM.
+
+An equally weighted portfolio of stocks is not the CAPM market portfolio. The theoretical market portfolio is value-weighted. It includes all relevant risky assets, not only stocks.
+
+### Deriving the Capital Asset Pricing Model
+
+The Capital Asset Pricing Model (CAPM) gives the expected return of an asset under a set of assumptions. Under the standard CAPM framework, investors:
+
+- Use expected return and variance to evaluate portfolios.
+- Can lend and borrow at the return of a risk-free asset.
+- Can diversify asset-specific risk.
+- Select efficient portfolios based on their risk-return preferences.
+- Share compatible expectations about asset returns, risks and covariances.
+
+Under these assumptions, all investors identify the same tangency portfolio. Each investor holds a combination of this portfolio and the risk-free asset. Together, investors must hold all risky assets. Therefore, the market portfolio is the common tangency portfolio.
+
+For an individual asset $i$, beta $\beta_i$ is:
+
+$$
+\boxed{
+\beta_i
+=
+\frac{\operatorname{Cov}(r_i,r_m)}
+{\operatorname{Var}(r_m)}
+}
+$$
+
+In this equation:
+
+- $r_i$ is the return of asset $i$.
+- $r_m$ is the market portfolio return.
+- $\operatorname{Cov}(r_i,r_m)$ is the covariance between the asset and the market.
+- $\operatorname{Var}(r_m)$ is the market portfolio variance.
+
+Beta measures the sensitivity of an asset to market movements in the CAPM framework.
+
+Use these steps to derive the CAPM equation:
+
+1. The market portfolio has the maximum Sharpe ratio. Therefore, a small change in any weight cannot increase the Sharpe ratio. All assets have positive weights in the market portfolio, so this condition applies to each asset.
+
+2. Write the Sharpe ratio in terms of the weights. If you multiply all weights by the same positive number, this ratio does not change. Therefore, the condition $\sum_i w_i=1$ does not restrict the maximum:
+
+$$
+S_p=\frac{\sum_{i=1}^{N} w_i\left(\mathbb{E}[r_i]-r_f\right)}{\sigma_p}
+$$
+
+3. Differentiate $S_p$ with respect to $w_i$. The derivative of $\sigma_p$ with respect to $w_i$ is $\operatorname{Cov}(r_i,r_p)/\sigma_p$. Set the result to zero at the market portfolio:
+
+$$
+\frac{\mathbb{E}[r_i]-r_f}{\sigma_m}
+-
+\frac{\left(\mathbb{E}[r_m]-r_f\right)\operatorname{Cov}(r_i,r_m)}{\sigma_m^3}
+=0
+$$
+
+4. Rearrange the equation, with $\sigma_m^2=\operatorname{Var}(r_m)$:
+
+$$
+\mathbb{E}[r_i]-r_f
+=
+\frac{\operatorname{Cov}(r_i,r_m)}{\operatorname{Var}(r_m)}
+\left(\mathbb{E}[r_m]-r_f\right)
+$$
+
+5. Replace the fraction with $\beta_i$, and add $r_f$ to the two sides. The result is the CAPM equation:
+
+$$
+\boxed{
+\mathbb{E}[r_i]
+=
+r_f+
+\beta_i
+\left(
+\mathbb{E}[r_m]-r_f
+\right)
+}
+$$
+
+The terms in this equation are:
+
+- $\mathbb{E}[r_i]$: Expected return of asset $i$.
+- $r_f$: Risk-free return.
+- $\beta_i$: Systematic risk of asset $i$, relative to the market.
+- $\mathbb{E}[r_m]$: Expected return of the market portfolio.
+- $\mathbb{E}[r_m]-r_f$: Expected market risk premium.
+
+CAPM states that the expected return of an asset is equal to the risk-free return plus a risk premium. The risk premium depends on the beta of the asset and on the expected market risk premium. An asset with a higher beta has a higher expected return when the market risk premium is positive.
+
+The Security Market Line is the plot of this equation, with beta on the horizontal axis.
+
+CAPM is a theoretical model. Its assumptions are simplifications. Its expected returns are not guaranteed returns, and they do not always agree with observed market returns.
+
+**Modern Portfolio Theory explains how to combine assets to manage risk and return. CAPM explains how the market prices systematic risk under a set of theoretical assumptions.**
+
+</Section>
+
+<Section title="Web Application" kind="interactive">
+
+The web application is a practical implementation of the theory. Users can construct and analyse a portfolio of up to 20 assets. They can select equities and exchange-traded funds (ETFs).
+
+The application retrieves available historical market data from Yahoo Finance through the `yfinance` API. It uses the selected assets and their historical returns to evaluate portfolio combinations. The objective is to help users explore portfolio optimisation and understand the relationship between expected return and risk.
+
+### How the application calculates a portfolio
+
+1. The user adds between 2 and 20 assets. The application checks that Yahoo Finance has data for each asset.
+2. The application retrieves daily adjusted closing prices from 1 January 2015, or from the first available date. It keeps only the days on which all selected assets have a price. It stops if there are fewer than 60 daily returns.
+3. The application calculates the log returns. It multiplies the mean and the covariance of the daily returns by 252 to get annual values.
+4. The application uses the latest yield of the US 5-year Treasury note as the risk-free return. The Yahoo Finance ticker for this yield is `^FVX`.
+5. The application uses the Sequential Least Squares Programming (SLSQP) solver from SciPy to find the weights with the highest Sharpe ratio. Each weight is between 0 and 1, and the weights add to 1.
+6. The application solves for the efficient frontier at 50 target returns. It also calculates 10,000 portfolios with random weights.
+7. The application shows the optimal weights, the expected return, the standard deviation and the Sharpe ratio. A chart shows the random portfolios, the efficient frontier and the Capital Market Line.
+
+### Limitations of the application
+
+The results describe the historical period that the application uses. They are not forecasts and they are not investment advice. The application does not guarantee an optimal investment outcome.
+
+The application calculates the portfolio return as a weighted sum of log returns. This value is an approximation, because log returns do not add exactly across assets. The application does not convert currencies. It does not include trading costs or taxes. It does not calculate beta.
+
+### Open the application
+
+<p><a href="https://modern-portfolio-management.streamlit.app" target="_blank" rel="noopener noreferrer" className="label-caps inline-block border border-line px-5 py-3.5 no-underline hover:border-accent hover:text-accent">Open the Modern Portfolio Management application<span className="sr-only"> (opens in a new tab)</span></a></p>
+
+### Source code
+
+<p><a href="https://github.com/Is-what-Is/modern-portfolio-management" target="_blank" rel="noopener noreferrer" className="label-caps inline-block border border-line px-5 py-3.5 no-underline hover:border-accent hover:text-accent">View the source code on GitHub<span className="sr-only"> (opens in a new tab)</span></a></p>
+
+</Section>

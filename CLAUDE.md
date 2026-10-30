@@ -23,7 +23,7 @@ Data science portfolio. Read `PROJECT_SPEC.md` before substantial changes.
 
 - Dark page, light square-cornered cards with a hard offset shadow, one green accent, Archivo for text, Courier New for the hero only.
 - The accent green is never used as text on a light card (it fails contrast there).
-- The project grid runs right to left so the newest project is top-right.
+- The project grid runs left to right, then top to bottom, so the newest project is top-left.
 - The hero loop has no pause control (owner's decision). It must still collapse to the static version under `prefers-reduced-motion`.
 - Reference images: `docs/design-references/`. Skills: `.claude/skills/`.
 
