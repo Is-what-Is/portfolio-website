@@ -93,7 +93,7 @@ export const projects: Project[] = [
     // The application and repository links are in the write-up, so that they open in a new tab.
     writeUpOnly: true,
     summary:
-      "This project explains Modern Portfolio Theory and derives the Capital Asset Pricing Model (CAPM). A web application applies these concepts to portfolio construction.",
+      "This project explains Modern Portfolio Theory and the Capital Asset Pricing Model (CAPM). A web application applies these concepts to portfolio construction.",
   },
 ];
 

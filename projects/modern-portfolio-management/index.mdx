@@ -268,79 +268,18 @@ Three terms have different meanings:
 - **Capital Market Line:** A line that shows the relationship between expected return and total risk for efficient portfolios. These portfolios combine the risk-free asset and the tangency portfolio.
 - **Security Market Line (SML):** A line that shows the relationship between expected return and systematic risk. Beta measures this risk. The CAPM section defines beta.
 
-### From diversification to market risk
+### From diversification to the Capital Asset Pricing Model
 
-Portfolio risk has two types:
+An asset has two types of risk:
 
 1. **Asset-specific risk:** Risk that is related to an individual company or asset.
 2. **Systematic risk:** Risk from factors that affect many assets, for example changes in interest rates or in broad economic conditions.
 
-Diversification decreases the effect of asset-specific risk. It does not remove risk that affects the assets together. The equations that follow show this result.
+When you add assets to a portfolio, their asset-specific risks tend to offset one another. If a portfolio holds all publicly traded assets, the effect of the risk of each individual stock becomes small. The risk that remains comes from the covariances between the assets. Diversification cannot remove this risk.
 
-Start with the general portfolio variance:
+This portfolio is an approximation of the market portfolio. The theoretical market portfolio holds all risky assets in proportion to their market values.
 
-$$
-\operatorname{Var}(r_p)
-=
-\sum_{i=1}^{N}\sum_{j=1}^{N}
-w_iw_j\operatorname{Cov}(r_i,r_j)
-$$
-
-Consider an equally weighted portfolio:
-
-$$
-w_i=\frac{1}{N}
-$$
-
-Substitute the equal weights:
-
-$$
-\operatorname{Var}(r_p)
-=
-\frac{1}{N^2}
-\sum_{i=1}^{N}\sum_{j=1}^{N}
-\operatorname{Cov}(r_i,r_j)
-$$
-
-The double sum has $N$ variances and $N(N-1)$ covariances between different assets. Let $\overline{V}_N$ be the average of the variances. Let $\overline{C}_N$ be the average of the covariances between different assets. Then:
-
-$$
-\operatorname{Var}(r_p)
-=
-\frac{1}{N}\,\overline{V}_N
-+
-\frac{N-1}{N}\,\overline{C}_N
-$$
-
-When $N$ increases, the first term tends to decrease. The second term can remain significant.
-
-This result needs two assumptions about the covariance structure. First, $\overline{V}_N$ stays below a fixed value as $N$ increases. Second, $\overline{C}_N$ approaches a limit as $N$ increases. Under these assumptions, the portfolio variance approaches the limit of the average covariance:
-
-$$
-\lim_{N\to\infty}\operatorname{Var}(r_p)
-=
-\text{limiting average covariance}
-$$
-
-This result is a theoretical limit for equally weighted portfolios. The value of the limit depends on the assets. It is not one universal value of market risk for every possible portfolio.
-
-In the standard CAPM framework, investors can diversify away asset-specific risk. They cannot remove systematic market risk if they hold more assets. A broad market portfolio therefore gives the theoretical basis for the market-risk component in CAPM.
-
-An equally weighted portfolio of stocks is not the CAPM market portfolio. The theoretical market portfolio is value-weighted. It includes all relevant risky assets, not only stocks.
-
-### Deriving the Capital Asset Pricing Model
-
-The Capital Asset Pricing Model (CAPM) gives the expected return of an asset under a set of assumptions. Under the standard CAPM framework, investors:
-
-- Use expected return and variance to evaluate portfolios.
-- Can lend and borrow at the return of a risk-free asset.
-- Can diversify asset-specific risk.
-- Select efficient portfolios based on their risk-return preferences.
-- Share compatible expectations about asset returns, risks and covariances.
-
-Under these assumptions, all investors identify the same tangency portfolio. Each investor holds a combination of this portfolio and the risk-free asset. Together, investors must hold all risky assets. Therefore, the market portfolio is the common tangency portfolio.
-
-For an individual asset $i$, beta $\beta_i$ is:
+The Capital Asset Pricing Model (CAPM) gives the expected return of an asset under a set of theoretical assumptions. Investors can diversify away asset-specific risk, so the model gives no additional expected return for this risk. The expected return depends only on the contribution of the asset to market risk. Beta $\beta_i$ measures this contribution:
 
 $$
 \boxed{
@@ -351,44 +290,9 @@ $$
 }
 $$
 
-In this equation:
+In this equation, $r_i$ is the return of asset $i$ and $r_m$ is the market portfolio return.
 
-- $r_i$ is the return of asset $i$.
-- $r_m$ is the market portfolio return.
-- $\operatorname{Cov}(r_i,r_m)$ is the covariance between the asset and the market.
-- $\operatorname{Var}(r_m)$ is the market portfolio variance.
-
-Beta measures the sensitivity of an asset to market movements in the CAPM framework.
-
-Use these steps to derive the CAPM equation:
-
-1. The market portfolio has the maximum Sharpe ratio. Therefore, a small change in any weight cannot increase the Sharpe ratio. All assets have positive weights in the market portfolio, so this condition applies to each asset.
-
-2. Write the Sharpe ratio in terms of the weights. If you multiply all weights by the same positive number, this ratio does not change. Therefore, the condition $\sum_i w_i=1$ does not restrict the maximum:
-
-$$
-S_p=\frac{\sum_{i=1}^{N} w_i\left(\mathbb{E}[r_i]-r_f\right)}{\sigma_p}
-$$
-
-3. Differentiate $S_p$ with respect to $w_i$. The derivative of $\sigma_p$ with respect to $w_i$ is $\operatorname{Cov}(r_i,r_p)/\sigma_p$. Set the result to zero at the market portfolio:
-
-$$
-\frac{\mathbb{E}[r_i]-r_f}{\sigma_m}
--
-\frac{\left(\mathbb{E}[r_m]-r_f\right)\operatorname{Cov}(r_i,r_m)}{\sigma_m^3}
-=0
-$$
-
-4. Rearrange the equation, with $\sigma_m^2=\operatorname{Var}(r_m)$:
-
-$$
-\mathbb{E}[r_i]-r_f
-=
-\frac{\operatorname{Cov}(r_i,r_m)}{\operatorname{Var}(r_m)}
-\left(\mathbb{E}[r_m]-r_f\right)
-$$
-
-5. Replace the fraction with $\beta_i$, and add $r_f$ to the two sides. The result is the CAPM equation:
+The CAPM equation is:
 
 $$
 \boxed{
@@ -402,19 +306,11 @@ r_f+
 }
 $$
 
-The terms in this equation are:
+In this equation, $\mathbb{E}[r_m]-r_f$ is the expected market risk premium.
 
-- $\mathbb{E}[r_i]$: Expected return of asset $i$.
-- $r_f$: Risk-free return.
-- $\beta_i$: Systematic risk of asset $i$, relative to the market.
-- $\mathbb{E}[r_m]$: Expected return of the market portfolio.
-- $\mathbb{E}[r_m]-r_f$: Expected market risk premium.
+The expected return of an asset is equal to the risk-free return plus a payment for market risk. An asset with a beta of 1 moves with the market, so it has the expected return of the market. When the market risk premium is positive, an asset with a higher beta has a higher expected return.
 
-CAPM states that the expected return of an asset is equal to the risk-free return plus a risk premium. The risk premium depends on the beta of the asset and on the expected market risk premium. An asset with a higher beta has a higher expected return when the market risk premium is positive.
-
-The Security Market Line is the plot of this equation, with beta on the horizontal axis.
-
-CAPM is a theoretical model. Its assumptions are simplifications. Its expected returns are not guaranteed returns, and they do not always agree with observed market returns.
+CAPM is a theoretical model. Its expected returns are not guaranteed returns, and they do not always agree with observed market returns.
 
 **Modern Portfolio Theory explains how to combine assets to manage risk and return. CAPM explains how the market prices systematic risk under a set of theoretical assumptions.**
 
